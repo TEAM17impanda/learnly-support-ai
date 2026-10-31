@@ -3,130 +3,867 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learnly Support AI</title>
+<title>AI CUSTOMER SUPPORTER for school | Brighterly Copilot (Learnly Engine)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f5f6f8; --panel:#fff; --line:#e4e7ec; --text:#1d2433; --muted:#667085;
-    --brand:#4f46e5; --brand-soft:#eef0ff; --green:#12805c; --green-soft:#e6f6ef;
-    --amber:#b54708; --amber-soft:#fff3e0; --red:#c0261d; --red-soft:#fdeceb; --blue-soft:#e8f1ff;
+    --bg-canvas: #f4efe6;
+    --grid-line: rgba(43, 51, 83, 0.08);
+    --ink: #2b3353;
+    --ink-dark: #1e243a;
+    --card-bg: #ffffff;
+    --panel-subtle: #faf8f5;
+    
+    --brand: #2b3353;
+    --brand-accent: #4361ee;
+    --brand-soft: #e9edfc;
+    
+    --green: #0f8544;
+    --green-light: #22c55e;
+    --green-soft: #e8f7ee;
+    --green-border: #15803d;
+    
+    --amber: #b45309;
+    --amber-soft: #fef3c7;
+    
+    --red: #dc2626;
+    --red-soft: #fee2e2;
+    
+    --sticker-ring: #c2caee;
+    --sticker-plus: #a6c5f7;
+    
+    --shadow-solid: 3px 3px 0px #2b3353;
+    --shadow-solid-sm: 2px 2px 0px #2b3353;
+    --shadow-solid-lg: 5px 5px 0px #2b3353;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#0f1218; --panel:#171b24; --line:#2a3040; --text:#e8ebf2; --muted:#97a0b3;
-      --brand:#8b8cff; --brand-soft:#23264a; --green:#4cc9a0; --green-soft:#12302a;
-      --amber:#f2b266; --amber-soft:#35290f; --red:#ff8d84; --red-soft:#3a1816; --blue-soft:#14233f; }
+
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink);
+    background-color: var(--bg-canvas);
+    background-image: 
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 26px 26px;
+    min-height: 100vh;
   }
-  * { box-sizing:border-box; }
-  body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); }
-  header { display:flex; align-items:center; gap:16px; padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap; }
-  header h1 { font-size:16px; margin:0; font-weight:700; }
-  header h1 span { color:var(--brand); }
-  nav { display:flex; gap:4px; }
-  nav button { border:0; background:none; padding:7px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font:inherit; font-weight:600; }
-  nav button.on { background:var(--brand-soft); color:var(--brand); }
-  .sp { flex:1; }
-  .pill { font-size:12px; padding:3px 9px; border-radius:99px; background:var(--blue-soft); color:var(--brand); font-weight:600; }
-  select, textarea, input { font:inherit; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:7px 9px; }
-  button.btn { border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:7px 12px; cursor:pointer; font:inherit; font-weight:600; }
-  button.btn:hover { border-color:var(--brand); }
-  button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
-  button.primary:hover { opacity:.9; }
-  button.ok { background:var(--green); color:#fff; border-color:var(--green); }
-  button:disabled { opacity:.5; cursor:not-allowed; }
 
-  main.inbox { display:grid; grid-template-columns:300px minmax(340px,1fr) 380px; height:calc(100vh - 54px); }
-  .col { overflow:auto; border-right:1px solid var(--line); background:var(--panel); }
-  .col:last-child { border-right:0; }
-  .col h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0; padding:14px 16px 8px; }
-  .sim { padding:10px 16px 14px; border-bottom:1px solid var(--line); display:grid; gap:8px; }
-  .sim textarea { width:100%; resize:vertical; min-height:56px; }
-  .ticket { padding:11px 16px; border-bottom:1px solid var(--line); cursor:pointer; }
-  .ticket:hover { background:var(--bg); }
-  .ticket.sel { background:var(--brand-soft); }
-  .ticket .r1 { display:flex; gap:8px; align-items:center; margin-bottom:3px; }
-  .ticket .nm { font-weight:600; flex:1; }
-  .ticket .tx { color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .ticket.done { opacity:.62; }
-  .badge { font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; }
-  .P1 { background:var(--red-soft); color:var(--red); }
-  .P2 { background:var(--amber-soft); color:var(--amber); }
-  .P3 { background:var(--green-soft); color:var(--green); }
-  .risk-low { background:var(--green-soft); color:var(--green); }
-  .risk-medium { background:var(--amber-soft); color:var(--amber); }
-  .risk-high { background:var(--red-soft); color:var(--red); }
-  .tag { font-size:11px; padding:2px 7px; border-radius:6px; background:var(--bg); color:var(--muted); border:1px solid var(--line); }
+  /* Neo-brutalist Scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+  ::-webkit-scrollbar-thumb { background: #c8c2b5; border: 1.5px solid var(--ink); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink); }
 
-  .chat { padding:16px; display:flex; flex-direction:column; gap:10px; }
-  .bubble { max-width:86%; padding:9px 12px; border-radius:12px; white-space:pre-wrap; }
-  .b-student { background:var(--bg); align-self:flex-start; border:1px solid var(--line); }
-  .b-agent { background:var(--brand-soft); align-self:flex-end; }
-  .b-system { align-self:center; font-size:12.5px; background:var(--green-soft); color:var(--green); border-radius:99px; padding:5px 12px; max-width:95%; }
-  .meta { font-size:11px; color:var(--muted); margin-top:3px; }
-  .composer { position:sticky; bottom:0; background:var(--panel); border-top:1px solid var(--line); padding:12px 16px; display:grid; gap:8px; }
-  .composer textarea { width:100%; min-height:70px; resize:vertical; }
-  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  /* HEADER SLIDE AESTHETICS */
+  header.site-header {
+    background: #ffffff;
+    border-bottom: 2.5px solid var(--ink);
+    padding: 12px 20px;
+    box-shadow: 0 4px 0 rgba(43, 51, 83, 0.06);
+    position: relative;
+    z-index: 10;
+  }
 
-  .card { margin:0 14px 12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
-  .card h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
-  .kv { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:13px; }
-  .kv span:nth-child(odd) { color:var(--muted); }
-  .bar { height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:4px; }
-  .bar i { display:block; height:100%; }
-  ul.why { margin:0; padding-left:18px; }
-  ul.why li { margin-bottom:5px; }
-  .act { border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; }
-  .act.rec { border-color:var(--brand); background:var(--brand-soft); }
-  .act .t { font-weight:700; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-  .act .why2 { color:var(--muted); font-size:13px; margin:4px 0 8px; }
-  .act.st-executed { border-color:var(--green); background:var(--green-soft); }
-  .act.st-failed { border-color:var(--red); background:var(--red-soft); }
-  .act.st-rejected { opacity:.55; }
-  .empty { padding:40px 24px; color:var(--muted); text-align:center; }
+  .top-meta-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1.5px dashed rgba(43, 51, 83, 0.2);
+    font-size: 12px;
+  }
 
-  main.dash { display:none; padding:22px; max-width:1100px; margin:0 auto; }
-  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:18px; }
-  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
-  .kpi .v { font-size:28px; font-weight:800; letter-spacing:-.02em; }
-  .kpi .l { color:var(--muted); font-size:12.5px; }
-  .kpi .s { color:var(--green); font-size:12px; margin-top:2px; }
-  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
-  .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
-  .panel h3 { margin:0 0 12px; font-size:13px; }
-  .hb { display:grid; grid-template-columns:130px 1fr 28px; gap:8px; align-items:center; margin-bottom:7px; font-size:13px; }
-  .hb .bar { margin:0; height:10px; }
-  .note { color:var(--muted); font-size:12px; margin-top:14px; }
-  .audit { font:12px ui-monospace,Menlo,monospace; color:var(--muted); max-height:220px; overflow:auto; }
-  .audit div { padding:2px 0; border-bottom:1px dashed var(--line); }
-  @media (max-width:1000px){ main.inbox{ grid-template-columns:1fr; height:auto;} .col{ border-right:0; border-bottom:1px solid var(--line);} }
+  /* Figma-like cursor pill */
+  .figma-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .figma-name {
+    background: #0f8544;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .figma-box {
+    border: 1.5px solid #0f8544;
+    background: rgba(15, 133, 68, 0.08);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .school-domain-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--ink);
+    text-decoration: none;
+    background: #ffffff;
+    padding: 3px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: var(--shadow-solid-sm);
+    transition: transform 0.1s;
+  }
+  .school-domain-tag:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-solid);
+  }
+
+  /* Page 01 indicator */
+  .page-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 3px 4px 3px 10px;
+    border-radius: 999px;
+  }
+  .page-num {
+    background: #ffffff;
+    color: var(--ink);
+    font-weight: 900;
+    font-size: 11px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Main Header Content */
+  .main-header-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+  }
+
+  /* Sticker Ring decoration */
+  .sticker-ring {
+    width: 32px;
+    height: 32px;
+    animation: floatSlow 4s ease-in-out infinite;
+  }
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(4deg); }
+  }
+
+  h1.brand-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 23px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .pill-for-school {
+    background: #1f2438;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: lowercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    transform: rotate(-3deg);
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.25);
+    display: inline-block;
+  }
+
+  /* Sticker Plus decoration */
+  .sticker-plus {
+    width: 24px;
+    height: 24px;
+    animation: floatCross 5s ease-in-out infinite;
+  }
+  @keyframes floatCross {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(3px) rotate(-6deg); }
+  }
+
+  nav.nav-tabs {
+    display: flex;
+    gap: 6px;
+    margin-left: 10px;
+  }
+
+  nav.nav-tabs button {
+    border: 2px solid var(--ink);
+    background: #ffffff;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: var(--shadow-solid-sm);
+    transition: all 0.12s ease;
+  }
+
+  nav.nav-tabs button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-solid);
+  }
+
+  nav.nav-tabs button.on {
+    background: var(--ink);
+    color: #ffffff;
+    box-shadow: var(--shadow-solid-sm);
+  }
+
+  .sp { flex: 1; }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .status-pill {
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: var(--shadow-solid-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-pill::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+  }
+
+  select, textarea, input {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  select:focus, textarea:focus, input:focus {
+    border-color: var(--brand-accent);
+  }
+
+  button.btn {
+    border: 2px solid var(--ink);
+    background: #ffffff;
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: var(--shadow-solid-sm);
+    transition: all 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  button.btn:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-solid);
+  }
+
+  button.btn:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--ink);
+  }
+
+  button.primary {
+    background: var(--ink);
+    color: #ffffff;
+  }
+  button.primary:hover:not(:disabled) {
+    background: var(--ink-dark);
+  }
+
+  button.ok {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #064e3b;
+    box-shadow: 2px 2px 0px #064e3b;
+  }
+  button.ok:hover:not(:disabled) {
+    box-shadow: 3px 3px 0px #064e3b;
+  }
+
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: var(--shadow-solid-sm) !important;
+  }
+
+  /* WORKSPACE LAYOUT */
+  main.inbox {
+    display: grid;
+    grid-template-columns: 320px minmax(360px, 1fr) 390px;
+    height: calc(100vh - 105px);
+    background: transparent;
+  }
+
+  .col {
+    overflow-y: auto;
+    border-right: 2px solid var(--ink);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+  }
+  .col:last-child {
+    border-right: 0;
+  }
+
+  .col h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 0;
+    padding: 14px 16px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .col h2::before {
+    content: "■";
+    font-size: 9px;
+    color: var(--brand-accent);
+  }
+
+  /* TICKET SIMULATION BOX */
+  .sim {
+    padding: 12px 16px 16px;
+    border-bottom: 2px solid var(--ink);
+    display: grid;
+    gap: 10px;
+    background: #ffffff;
+  }
+  .sim select {
+    font-weight: 700;
+  }
+  .sim textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  /* TICKETS QUEUE */
+  .ticket-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .ticket {
+    padding: 12px 16px;
+    border-bottom: 1.5px solid rgba(43, 51, 83, 0.15);
+    cursor: pointer;
+    transition: all 0.12s;
+    background: transparent;
+  }
+  .ticket:hover {
+    background: #ffffff;
+  }
+  .ticket.sel {
+    background: var(--brand-soft);
+    border-left: 5px solid var(--ink);
+  }
+  .ticket .r1 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .ticket .nm {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--ink);
+    flex: 1;
+  }
+  .ticket .tx {
+    color: #4b5563;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ticket.done {
+    opacity: 0.65;
+  }
+
+  /* Neo-brutalist Badges */
+  .badge {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1.5px solid var(--ink);
+    box-shadow: 1px 1px 0px var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .P1 { background: var(--red-soft); color: var(--red); border-color: var(--red); }
+  .P2 { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+  .P3 { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  
+  .risk-low { background: var(--green-soft); color: var(--green); }
+  .risk-medium { background: var(--amber-soft); color: var(--amber); }
+  .risk-high { background: var(--red-soft); color: var(--red); }
+
+  .tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    box-shadow: 1px 1px 0px rgba(43,51,83,0.3);
+  }
+
+  /* CHAT SECTION */
+  .chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bubble {
+    max-width: 86%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    white-space: pre-wrap;
+    border: 2px solid var(--ink);
+    box-shadow: var(--shadow-solid-sm);
+    font-size: 13.5px;
+  }
+  .b-student {
+    background: #ffffff;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+  .b-agent {
+    background: var(--brand-soft);
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+  .b-system {
+    align-self: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #d1fae5;
+    color: #065f46;
+    border: 1.5px solid #065f46;
+    border-radius: 999px;
+    padding: 5px 14px;
+    max-width: 92%;
+    box-shadow: 1px 1px 0px #065f46;
+  }
+  .meta {
+    font-size: 11px;
+    color: #555f77;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  .composer {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    border-top: 2px solid var(--ink);
+    padding: 14px 16px;
+    display: grid;
+    gap: 10px;
+    box-shadow: 0 -3px 0 rgba(43, 51, 83, 0.04);
+  }
+  .composer textarea {
+    width: 100%;
+    min-height: 75px;
+    resize: vertical;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* RIGHT COPILOT PANEL */
+  .copilot-content {
+    padding: 0 0 20px;
+  }
+  
+  .card {
+    margin: 0 14px 14px;
+    padding: 14px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: var(--shadow-solid);
+  }
+  .card h3 {
+    margin: 0 0 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 12px;
+    font-size: 13px;
+  }
+  .kv span:nth-child(odd) {
+    color: #555f77;
+    font-weight: 600;
+  }
+  .kv span:nth-child(even), .kv b {
+    font-weight: 700;
+  }
+
+  .bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    border: 1.5px solid var(--ink);
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+
+  ul.why {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  ul.why li {
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .act {
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #ffffff;
+    box-shadow: var(--shadow-solid-sm);
+  }
+  .act.rec {
+    border-color: var(--ink);
+    background: #fdfbf7;
+    border-left: 5px solid #2b3353;
+  }
+  .act .t {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    color: var(--ink);
+  }
+  .act .why2 {
+    color: #4b5563;
+    font-size: 12.5px;
+    margin: 6px 0 10px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+  .act.st-executed {
+    border-color: #064e3b;
+    background: #f0fdf4;
+  }
+  .act.st-failed {
+    border-color: var(--red);
+    background: var(--red-soft);
+  }
+  .act.st-rejected {
+    opacity: 0.6;
+  }
+
+  .empty {
+    padding: 50px 24px;
+    color: #6b7280;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  /* DASHBOARD */
+  main.dash {
+    display: none;
+    padding: 24px;
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .kpi {
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-solid);
+  }
+  .kpi .v {
+    font-family: 'Outfit', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .kpi .l {
+    color: #555f77;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .kpi .s {
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .panel {
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-solid);
+  }
+  .panel h3 {
+    margin: 0 0 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+  }
+
+  .hb {
+    display: grid;
+    grid-template-columns: 140px 1fr 32px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 9px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .hb .bar {
+    margin: 0;
+    height: 12px;
+  }
+
+  .note {
+    color: #555f77;
+    font-size: 12px;
+    margin-top: 14px;
+    font-weight: 600;
+  }
+
+  .audit {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    background: #f8fafc;
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .audit div {
+    padding: 4px 0;
+    border-bottom: 1px dashed #cbd5e1;
+  }
+
+  @media (max-width: 1050px) {
+    main.inbox {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    .col {
+      border-right: 0;
+      border-bottom: 2px solid var(--ink);
+      max-height: 500px;
+    }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Learnly <span>Support AI</span></h1>
-  <nav>
-    <button id="tab-inbox" class="on" onclick="showTab('inbox')">Звернення</button>
-    <button id="tab-dash" onclick="showTab('dash')">Дашборд</button>
-  </nav>
-  <div class="sp"></div>
-  <span class="pill" id="llm-pill">…</span>
-  <label class="row" style="gap:6px">Автономність
-    <select id="autonomy" onchange="setAutonomy(this.value)">
-      <option value="copilot">Copilot (усе через підтвердження)</option>
-      <option value="auto_low_risk">Auto: low-risk без підтвердження</option>
-    </select>
-  </label>
-  <button class="btn" onclick="resetDemo()">Reset demo</button>
+
+<header class="site-header">
+  <!-- Top meta line matching slide badges -->
+  <div class="top-meta-bar">
+    <div class="figma-tag">
+      <span class="figma-name">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l7 18 3-7 7-3L3 3z"/></svg>
+        Khrystyna
+      </span>
+      <span class="figma-box">Hanover and Tyke</span>
+    </div>
+
+    <div class="row" style="gap: 12px;">
+      <a href="https://brighterly.com/" target="_blank" rel="noopener" class="school-domain-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        https://brighterly.com/
+      </a>
+      <span style="font-weight: 800; color: var(--ink);">Presented by Team17</span>
+      <div class="page-pill">
+        <span>Page</span>
+        <span class="page-num">01</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main header banner matching slide typography and stickers -->
+  <div class="main-header-row">
+    <div class="title-group">
+      <!-- 3D Donut Ring Sticker -->
+      <svg class="sticker-ring" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="18" fill="#C2CAEE" stroke="#2B3353" stroke-width="3.5"/>
+        <circle cx="24" cy="24" r="8" fill="#F4EFE6" stroke="#2B3353" stroke-width="3"/>
+        <path d="M12 18 C14 11, 20 8, 28 8" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+
+      <h1 class="brand-title">
+        AI Customer Supporter
+        <span class="pill-for-school">for school</span>
+      </h1>
+
+      <!-- 3D Plus Sticker -->
+      <svg class="sticker-plus" viewBox="0 0 36 36" fill="none">
+        <path d="M13 3 L23 3 L23 13 L33 13 L33 23 L23 23 L23 33 L13 33 L13 23 L3 23 L3 13 L13 13 Z" 
+              fill="#A6C5F7" stroke="#2B3353" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M15 6 L20 6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <nav class="nav-tabs">
+      <button id="tab-inbox" class="on" onclick="showTab('inbox')">Звернення</button>
+      <button id="tab-dash" onclick="showTab('dash')">Дашборд</button>
+    </nav>
+
+    <div class="sp"></div>
+
+    <div class="header-actions">
+      <span class="status-pill" id="llm-pill">…</span>
+      <label class="row" style="gap:6px; font-weight: 700; font-size: 13px;">Автономність:
+        <select id="autonomy" onchange="setAutonomy(this.value)">
+          <option value="copilot">Copilot (через підтвердження)</option>
+          <option value="auto_low_risk">Auto: low-risk автономно</option>
+        </select>
+      </label>
+      <button class="btn" onclick="resetDemo()">Скинути демо</button>
+    </div>
+  </div>
 </header>
 
 <main class="inbox" id="inbox">
   <section class="col">
-    <h2>Нове звернення (симуляція учня)</h2>
+    <h2>Нове звернення (симуляція учня / батьків)</h2>
     <div class="sim">
       <select id="sim-student" onchange="fillDemo()"></select>
-      <textarea id="sim-text" placeholder="Повідомлення учня…"></textarea>
-      <button class="btn primary" onclick="simulate()">Надіслати як учень</button>
+      <textarea id="sim-text" placeholder="Повідомлення учня або батьків…"></textarea>
+      <button class="btn primary" onclick="simulate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        Надіслати як учень
+      </button>
     </div>
-    <h2>Черга (за пріоритетом)</h2>
-    <div id="tickets"></div>
+    <h2>Черга тікетів (за пріоритетом)</h2>
+    <div id="tickets" class="ticket-list"></div>
   </section>
 
   <section class="col" id="mid">
@@ -148,10 +885,26 @@ const api = async (path, opts = {}) => {
   if (!r.ok) { const e = await r.json().catch(() => ({})); alert('Помилка: ' + (e.detail || r.status)); throw new Error(r.status); }
   return r.json();
 };
-const INTENT = { refund:'Повернення коштів', double_charge:'Подвійне списання', access:'Доступ', deadline:'Дедлайн', transfer:'Перенос потоку', certificate:'Сертифікат', other:'Інше' };
-const GOAL = { needs_more_time:'Потрібно більше часу', disengaged_or_mismatch:'Курс не підійшов / не залучений', billing_error:'Помилка білінгу', access_problem:'Проблема з доступом', info:'Інформаційний запит', unknown:'Не визначено' };
-const SENT = { neutral:'нейтральний', negative:'негативний', angry:'роздратований' };
-const ARGLBL = { target_cohort:'потік', days:'днів', team:'команда', reason:'причина' };
+
+const INTENT = { 
+  refund: 'Повернення коштів', 
+  double_charge: 'Подвійне списання', 
+  access: 'Доступ до платформи', 
+  deadline: 'Дедлайн / перенесення', 
+  transfer: 'Зміна викладача / потоку', 
+  certificate: 'Сертифікат / звіт', 
+  other: 'Інше' 
+};
+const GOAL = { 
+  needs_more_time: 'Потрібно більше часу / пауза', 
+  disengaged_or_mismatch: 'Невідповідність стилю / відтік', 
+  billing_error: 'Помилка білінгу', 
+  access_problem: 'Технічна проблема з доступом', 
+  info: 'Інформаційний запит', 
+  unknown: 'Не визначено' 
+};
+const SENT = { neutral: 'нейтральний', negative: 'негативний', angry: 'роздратований' };
+const ARGLBL = { target_cohort: 'новий потік / викладач', days: 'днів', team: 'команда', reason: 'причина' };
 let students = [], current = null, ticket = null;
 
 function showTab(t) {
@@ -164,14 +917,18 @@ function showTab(t) {
 
 async function init() {
   const h = await api('/health');
-  $('llm-pill').textContent = h.llm ? 'AI: LLM + правила' : 'AI: режим правил (fallback)';
+  $('llm-pill').textContent = h.llm ? 'AI: LLM + Guardrails' : 'AI: Rule-based Fallback';
   $('autonomy').value = h.autonomy;
   students = await api('/students');
   $('sim-student').innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)} · ${esc(s.course)}</option>`).join('');
   fillDemo();
   await loadTickets();
 }
-function fillDemo() { const s = students.find(x => x.id === $('sim-student').value); if (s) $('sim-text').value = s.demo_message; }
+
+function fillDemo() { 
+  const s = students.find(x => x.id === $('sim-student').value); 
+  if (s) $('sim-text').value = s.demo_message; 
+}
 
 async function loadTickets() {
   const items = await api('/tickets');
@@ -180,39 +937,52 @@ async function loadTickets() {
       <div class="r1"><span class="nm">${esc(t.student)}</span>
         <span class="badge ${t.priority.label}">${t.priority.label}</span></div>
       <div class="tx">${esc(t.last)}</div>
-      <div class="row" style="margin-top:5px">
+      <div class="row" style="margin-top:6px; gap:6px;">
         <span class="tag">${esc(INTENT[t.intent] || '—')}</span>
-        <span class="tag">риск відтоку ${t.churn_risk}%</span>
-        ${t.status === 'resolved' ? `<span class="tag" style="color:var(--green)">✓ ${t.resolved_by === 'ai' ? 'AI' : 'закрито'}</span>` : ''}
+        <span class="tag">відтік: ${t.churn_risk}%</span>
+        ${t.status === 'resolved' ? `<span class="tag" style="background:#d1fae5; color:#065f46; border-color:#065f46;">✓ ${t.resolved_by === 'ai' ? 'AI' : 'закрито'}</span>` : ''}
       </div></div>`).join('');
 }
 
-async function openTicket(id) { current = id; ticket = await api('/tickets/' + id); render(); loadTickets(); }
+async function openTicket(id) { 
+  current = id; 
+  ticket = await api('/tickets/' + id); 
+  render(); 
+  loadTickets(); 
+}
+
 async function simulate() {
-  const text = $('sim-text').value.trim(); if (!text) return;
-  const t = await api('/tickets', { method:'POST', body: JSON.stringify({ student_id: $('sim-student').value, message: text }) });
-  current = t.id; ticket = t; render(); loadTickets();
+  const text = $('sim-text').value.trim(); 
+  if (!text) return;
+  const t = await api('/tickets', { method: 'POST', body: JSON.stringify({ student_id: $('sim-student').value, message: text }) });
+  current = t.id; 
+  ticket = t; 
+  render(); 
+  loadTickets();
 }
 
 function render() {
-  const t = ticket; if (!t) return;
+  const t = ticket; 
+  if (!t) return;
   const a = t.analysis || {}, c = t.student_context || {};
   const msgs = t.messages.map(m => {
     if (m.role === 'system') return `<div class="bubble b-system">${esc(m.text)}</div>`;
-    const q = m.quality ? `<div class="meta">${esc(m.agent || 'Агент')} · якість відповіді: <b>${m.quality.score}/100</b> (${esc(m.quality.label)})${m.from_ai_draft ? ' · AI-чернетка' : ''}${m.quality.tips.length ? '<br>💡 ' + m.quality.tips.map(esc).join('; ') : ''}</div>` : '';
-    return `<div class="bubble b-${m.role}">${esc(m.text)}<div class="meta">${m.role === 'student' ? esc(t.student.name) : ''} ${esc(m.ts)}</div>${q}</div>`;
+    const q = m.quality ? `<div class="meta" style="margin-top:6px; border-top:1px dashed #cbd5e1; padding-top:4px;">${esc(m.agent || 'Агент')} · якість: <b>${m.quality.score}/100</b> (${esc(m.quality.label)})${m.from_ai_draft ? ' · ✨ AI-чернетка' : ''}${m.quality.tips.length ? '<br>💡 ' + m.quality.tips.map(esc).join('; ') : ''}</div>` : '';
+    return `<div class="bubble b-${m.role}">${esc(m.text)}<div class="meta">${m.role === 'student' ? esc(t.student.name) : 'Оператор підтримки'} · ${esc(m.ts)}</div>${q}</div>`;
   }).join('');
+  
   $('mid').innerHTML = `
-    <h2>${esc(t.student.name)} · ${esc(t.student.course)} · ${esc(t.id)}</h2>
-    <div class="chat">${msgs}</div>
+    <h2>${esc(t.student.name)} · ${esc(t.student.course)} · ID ${esc(t.id)}</h2>
+    <div class="chat-container">${msgs}</div>
     <div class="composer">
-      <textarea id="reply" placeholder="Відповідь учню…"></textarea>
+      <textarea id="reply" placeholder="Відповідь батькам або учню…"></textarea>
       <div class="row">
         <button class="btn" onclick="useDraft()">✨ Вставити чернетку AI</button>
-        <button class="btn primary" onclick="sendReply()">Надіслати</button>
+        <button class="btn primary" onclick="sendReply()">Надіслати відповідь</button>
         <span class="meta" id="live-q"></span>
       </div>
     </div>`;
+  
   $('reply').addEventListener('input', () => { fromDraft = false; });
 
   const pct = (n) => Math.max(0, Math.min(100, n));
@@ -220,78 +990,174 @@ function render() {
   const acts = (t.actions || []).map(x => `
     <div class="act ${x.recommended ? 'rec' : ''} st-${x.status}">
       <div class="t">${esc(x.title)} <span class="badge risk-${x.risk}">${x.risk}</span>
-        ${x.recommended ? '<span class="badge" style="background:var(--brand);color:#fff">рекомендовано</span>' : ''}
-        ${x.status !== 'proposed' ? `<span class="tag">${x.status === 'executed' ? '✓ виконано' + (x.executed_by === 'ai' ? ' (AI)' : '') : x.status === 'failed' ? '⛔ заблоковано' : 'відхилено'}</span>` : ''}</div>
+        ${x.recommended ? '<span class="badge" style="background:var(--ink);color:#fff">рекомендовано</span>' : ''}
+        ${x.status !== 'proposed' ? `<span class="tag" style="margin-left:auto">${x.status === 'executed' ? '✓ виконано' + (x.executed_by === 'ai' ? ' (AI)' : '') : x.status === 'failed' ? '⛔ заблоковано' : 'відхилено'}</span>` : ''}</div>
       ${Object.keys(x.args || {}).length ? `<div class="meta">${Object.entries(x.args).map(([k, v]) => `${ARGLBL[k] || k}: <b>${esc(v)}</b>`).join(' · ')}</div>` : ''}
       <div class="why2">${esc(x.rationale)}</div>
-      ${x.error ? `<div class="why2" style="color:var(--red)">${esc(x.error)}</div>` : ''}
-      ${x.result ? `<div class="why2" style="color:var(--green)">${esc(x.result.summary)}</div>` : ''}
-      ${x.status === 'proposed' ? `<div class="row">
-        <button class="btn ok" onclick="act('${x.id}','approve')">${x.requires_approval ? 'Підтвердити' : 'Виконати'}</button>
+      ${x.error ? `<div class="why2" style="color:var(--red); font-weight:800;">${esc(x.error)}</div>` : ''}
+      ${x.result ? `<div class="why2" style="color:var(--green); font-weight:800;">${esc(x.result.summary)}</div>` : ''}
+      ${x.status === 'proposed' ? `<div class="row" style="margin-top:8px">
+        <button class="btn ok" onclick="act('${x.id}','approve')">${x.requires_approval ? 'Підтвердити дію' : 'Виконати дію'}</button>
         <button class="btn" onclick="act('${x.id}','reject')">Відхилити</button></div>` : ''}
-    </div>`).join('') || '<div class="meta">Дій немає — потрібне уточнення.</div>';
+    </div>`).join('') || '<div class="meta" style="padding:10px 0;">Дій немає — потрібне уточнення.</div>';
 
   $('right').innerHTML = `
-    <h2>AI-копілот ${a.source ? `<span class="tag" style="margin-left:6px">${a.source === 'llm' ? 'LLM' : 'правила'}</span>` : ''}</h2>
-    <div class="card"><h3>Розуміння</h3>
-      <div class="kv"><span>Намір</span><b>${esc(INTENT[a.intent])}</b>
-        <span>Справжня мета</span><b>${esc(GOAL[a.true_goal])}</b>
-        <span>Настрій</span><span>${esc(SENT[a.sentiment])}</span>
-        <span>Пріоритет</span><span><span class="badge ${a.priority?.label}">${a.priority?.label}</span></span></div>
-      <div class="meta" style="margin-top:8px">Ризик відтоку: <b>${a.churn_risk}%</b></div>
-      <div class="bar"><i style="width:${pct(a.churn_risk)}%;background:${riskColor}"></i></div></div>
-    <div class="card"><h3>Чому AI так вирішив</h3><ul class="why">${(a.reasoning || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
-    <div class="card"><h3>Рекомендовані дії</h3>${acts}</div>
-    <div class="card"><h3>Контекст учня</h3><div class="kv">
-      <span>Курс / потік</span><span>${esc(c.course_name)} · ${esc(c.cohort)}</span>
-      <span>Оплата</span><span>${c.amount_paid} грн, ${c.days_since_payment ?? '—'} дн. тому</span>
-      <span>Прогрес</span><span>${c.lessons_done}/${c.lessons_total} (за планом ${c.lessons_expected})</span>
-      <span>Останній вхід</span><span>${c.last_login_days_ago} дн. тому</span>
-      <span>Доступ</span><span>${c.access_active ? 'активний' : 'вимкнений'}</span>
-      <span>Повернення</span><span>${c.refunded ? 'вже повернено' : c.refund_eligible ? 'можливе (вікно відкрите)' : 'вікно закрите'}</span></div></div>
-    ${a.llm_error ? `<div class="card meta">LLM недоступний → fallback: ${esc(a.llm_error)}</div>` : ''}`;
+    <div class="copilot-content">
+      <h2>AI-копілот ${a.source ? `<span class="tag" style="margin-left:6px">${a.source === 'llm' ? 'LLM' : 'правила'}</span>` : ''}</h2>
+      
+      <div class="card">
+        <h3>Аналіз звернення</h3>
+        <div class="kv">
+          <span>Намір клієнта</span><b>${esc(INTENT[a.intent] || a.intent)}</b>
+          <span>Справжня мета</span><b>${esc(GOAL[a.true_goal] || a.true_goal)}</b>
+          <span>Тональність</span><span>${esc(SENT[a.sentiment] || a.sentiment)}</span>
+          <span>Пріоритет</span><span><span class="badge ${a.priority?.label}">${a.priority?.label}</span></span>
+        </div>
+        <div class="meta" style="margin-top:10px; display:flex; justify-content:space-between;">
+          <span>Ризик відтоку учня:</span> <b>${a.churn_risk}%</b>
+        </div>
+        <div class="bar"><i style="width:${pct(a.churn_risk)}%;background:${riskColor}"></i></div>
+      </div>
+
+      <div class="card">
+        <h3>Чому AI так вирішив (Reasoning)</h3>
+        <ul class="why">${(a.reasoning || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+      </div>
+
+      <div class="card">
+        <h3>Рекомендовані дії (Policy-Guard)</h3>
+        ${acts}
+      </div>
+
+      <div class="card">
+        <h3>Контекст учня (Brighterly CRM)</h3>
+        <div class="kv">
+          <span>Програма / потік</span><span>${esc(c.course_name)} · ${esc(c.cohort)}</span>
+          <span>Оплата</span><span>${c.amount_paid} грн, ${c.days_since_payment ?? '—'} дн. тому</span>
+          <span>Уроків пройдено</span><span>${c.lessons_done}/${c.lessons_total} (очікувано ${c.lessons_expected})</span>
+          <span>Останній вхід</span><span>${c.last_login_days_ago} дн. тому</span>
+          <span>Статус доступу</span><span>${c.access_active ? 'активний' : 'призупинено'}</span>
+          <span>Повернення коштів</span><span>${c.refunded ? 'вже повернено' : c.refund_eligible ? 'можливе (вікно відкрите)' : 'вікно закрите'}</span>
+        </div>
+      </div>
+
+      ${a.llm_error ? `<div class="card meta" style="color:var(--red);">LLM недоступний → fallback: ${esc(a.llm_error)}</div>` : ''}
+    </div>`;
 }
 
 let fromDraft = false;
-function useDraft() { $('reply').value = ticket.analysis.suggested_reply; fromDraft = true; }
-async function sendReply() {
-  const text = $('reply').value.trim(); if (!text) return;
-  ticket = await api(`/tickets/${current}/send-reply`, { method:'POST', body: JSON.stringify({ text, from_ai_draft: fromDraft, agent_name: 'Ви' }) });
-  fromDraft = false; render(); loadTickets();
+function useDraft() { 
+  $('reply').value = ticket.analysis.suggested_reply; 
+  fromDraft = true; 
 }
-async function act(aid, what) { ticket = await api(`/tickets/${current}/actions/${aid}/${what}`, { method:'POST' }); render(); loadTickets(); }
-async function setAutonomy(v) { await api('/settings', { method:'POST', body: JSON.stringify({ autonomy: v }) }); }
-async function resetDemo() { await api('/reset', { method:'POST' }); current = null; ticket = null; $('mid').innerHTML = '<div class="empty">Демо скинуто.</div>'; $('right').innerHTML = ''; await loadTickets(); if ($('dash').style.display === 'block') loadDash(); }
+
+async function sendReply() {
+  const text = $('reply').value.trim(); 
+  if (!text) return;
+  ticket = await api(`/tickets/${current}/send-reply`, { 
+    method: 'POST', 
+    body: JSON.stringify({ text, from_ai_draft: fromDraft, agent_name: 'Ви' }) 
+  });
+  fromDraft = false; 
+  render(); 
+  loadTickets();
+}
+
+async function act(aid, what) { 
+  ticket = await api(`/tickets/${current}/actions/${aid}/${what}`, { method: 'POST' }); 
+  render(); 
+  loadTickets(); 
+}
+
+async function setAutonomy(v) { 
+  await api('/settings', { method: 'POST', body: JSON.stringify({ autonomy: v }) }); 
+}
+
+async function resetDemo() { 
+  await api('/reset', { method: 'POST' }); 
+  current = null; 
+  ticket = null; 
+  $('mid').innerHTML = '<div class="empty">Демо скинуто.</div>'; 
+  $('right').innerHTML = '<div class="empty">AI-копілот з\'явиться тут.</div>'; 
+  await loadTickets(); 
+  if ($('dash').style.display === 'block') loadDash(); 
+}
 
 function hbars(obj, labels) {
   const max = Math.max(1, ...Object.values(obj));
-  const rows = Object.entries(obj).map(([k, v]) => `<div class="hb"><span>${esc(labels?.[k] || k)}</span><div class="bar"><i style="width:${v / max * 100}%;background:var(--brand)"></i></div><b>${v}</b></div>`).join('');
+  const rows = Object.entries(obj).map(([k, v]) => `
+    <div class="hb">
+      <span>${esc(labels?.[k] || k)}</span>
+      <div class="bar"><i style="width:${v / max * 100}%;background:var(--ink)"></i></div>
+      <b>${v}</b>
+    </div>`).join('');
   return rows || '<div class="meta">Поки немає даних</div>';
 }
+
 async function loadDash() {
   const d = await api('/analytics'), a = d.automation, r = d.retention, q = d.quality;
   const fmt = (n) => n == null ? '—' : n;
   $('dash').innerHTML = `
     <div class="kpis">
-      <div class="kpi"><div class="v">${r.saved}</div><div class="l">Врятовано від повернення</div><div class="s">${r.saved_amount.toLocaleString('uk')} грн збережено</div></div>
-      <div class="kpi"><div class="v">${a.executed}<span style="font-size:15px;color:var(--muted)"> / ${a.proposed}</span></div><div class="l">Дій AI виконано / запропоновано</div><div class="s">${a.executed_by_ai} повністю автоматично</div></div>
-      <div class="kpi"><div class="v">${d.time_saved_min} хв</div><div class="l">Економія часу (модельна оцінка)</div></div>
-      <div class="kpi"><div class="v">${fmt(q.avg)}</div><div class="l">Середня якість відповідей</div><div class="s">AI-чернетки: ${fmt(q.avg_ai_draft)} · вручну: ${fmt(q.avg_manual)}</div></div>
-      <div class="kpi"><div class="v">${a.blocked_by_policy}</div><div class="l">Дій заблоковано політикою</div></div>
-      <div class="kpi"><div class="v">${fmt(d.avg_open_churn_risk)}${d.avg_open_churn_risk != null ? '%' : ''}</div><div class="l">Середній ризик відтоку (відкриті)</div></div>
+      <div class="kpi">
+        <div class="v">${r.saved}</div>
+        <div class="l">Врятовано від повернення</div>
+        <div class="s">${r.saved_amount.toLocaleString('uk')} грн збережено</div>
+      </div>
+      <div class="kpi">
+        <div class="v">${a.executed}<span style="font-size:16px;color:#6b7280"> / ${a.proposed}</span></div>
+        <div class="l">Дій AI виконано / запропоновано</div>
+        <div class="s">${a.executed_by_ai} повністю автономно</div>
+      </div>
+      <div class="kpi">
+        <div class="v">${d.time_saved_min} хв</div>
+        <div class="l">Економія часу команди</div>
+      </div>
+      <div class="kpi">
+        <div class="v">${fmt(q.avg)}/100</div>
+        <div class="l">Якість відповідей команди</div>
+        <div class="s">AI-чернетки: ${fmt(q.avg_ai_draft)} · вручну: ${fmt(q.avg_manual)}</div>
+      </div>
+      <div class="kpi">
+        <div class="v">${a.blocked_by_policy}</div>
+        <div class="l">Дій заблоковано policy-guard</div>
+      </div>
+      <div class="kpi">
+        <div class="v">${fmt(d.avg_open_churn_risk)}${d.avg_open_churn_risk != null ? '%' : ''}</div>
+        <div class="l">Середній ризик відтоку</div>
+      </div>
     </div>
+
     <div class="grid2">
-      <div class="panel"><h3>Причини звернень</h3>${hbars(d.by_intent, INTENT)}</div>
-      <div class="panel"><h3>Відкрита черга за пріоритетом</h3>${hbars(d.by_priority)}
-        <div class="note">Усього звернень: ${d.total_tickets} · відкрито ${d.open} · закрито ${d.resolved}</div></div>
-      <div class="panel"><h3>Audit log (останні дії AI)</h3><div class="audit" id="audit"></div></div>
-      <div class="panel"><h3>Якість підтримки</h3>
-        <div class="kv"><span>Оцінено відповідей</span><b>${q.count}</b><span>Низька якість (&lt;55)</span><b>${q.low_quality}</b></div>
-        <div class="note">${esc(d.note)}</div></div>
+      <div class="panel">
+        <h3>Причини звернень (Intents)</h3>
+        ${hbars(d.by_intent, INTENT)}
+      </div>
+      <div class="panel">
+        <h3>Черга за пріоритетом</h3>
+        ${hbars(d.by_priority)}
+        <div class="note">Усього звернень: ${d.total_tickets} · відкрито ${d.open} · вирішено ${d.resolved}</div>
+      </div>
+      <div class="panel">
+        <h3>Audit Log (безпека та дії AI)</h3>
+        <div class="audit" id="audit"></div>
+      </div>
+      <div class="panel">
+        <h3>Якість обслуговування</h3>
+        <div class="kv">
+          <span>Оцінено відповідей</span><b>${q.count}</b>
+          <span>Низька якість (&lt;55)</span><b>${q.low_quality}</b>
+        </div>
+        <div class="note">${esc(d.note)}</div>
+      </div>
     </div>`;
+
   const log = await api('/audit');
-  $('audit').innerHTML = log.slice().reverse().map(e => `<div>${esc(e.ts)} · ${esc(e.event)} · ${esc(e.tool || e.intent || e.ticket || '')} ${esc(e.by || e.reason || e.result || '')}</div>`).join('') || 'порожньо';
+  $('audit').innerHTML = log.slice().reverse().map(e => `
+    <div>${esc(e.ts)} · <b>${esc(e.event)}</b> · ${esc(e.tool || e.intent || e.ticket || '')} ${esc(e.by || e.reason || e.result || '')}</div>
+  `).join('') || 'порожньо';
 }
+
 init();
 </script>
 </body>
