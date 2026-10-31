@@ -20,7 +20,7 @@
   "core_functions": [
     {"name": "analyze", "file": "app/agent.py", "role": "LLM → fallback на правила"},
     {"name": "heuristic_analyze", "file": "app/agent.py", "role": "детермінований аналіз"},
-    {"name": "llm_analyze", "file": "app/agent.py", "role": "виклик Anthropic API + валідація дій"},
+    {"name": "llm_analyze", "file": "app/agent.py", "role": "виклик Google Gemini API + валідація дій"},
     {"name": "execute", "file": "app/tools.py", "role": "check() + run() — єдина точка зміни стану"},
     {"name": "build_context", "file": "app/context.py", "role": "похідні факти про учня"},
     {"name": "score_reply", "file": "app/quality.py", "role": "оцінка відповіді агента"}

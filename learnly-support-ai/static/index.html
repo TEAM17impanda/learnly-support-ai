@@ -746,6 +746,930 @@
     background: #f4f0ea;
     white-space: nowrap;
     width: 40%;
+
+/* =========== CHILD-FRIENDLY STUDENT WORKSPACE =========== */
+  #ws-student {
+    --kid-purple: #7c3aed;
+    --kid-purple-soft: #ede9fe;
+    --kid-yellow: #facc15;
+    --kid-yellow-soft: #fef9c3;
+    --kid-pink: #ec4899;
+    --kid-pink-soft: #fce7f3;
+    --kid-blue: #3b82f6;
+    --kid-blue-soft: #dbeafe;
+    --kid-green: #10b981;
+    --kid-green-soft: #d1fae5;
+  }
+  #ws-student .panel-box {
+    border-radius: 20px;
+    border-width: 3px;
+    border-color: var(--kid-purple);
+    box-shadow: 5px 5px 0px var(--kid-purple);
+  }
+  #ws-student .panel-header {
+    background: linear-gradient(135deg, var(--kid-purple-soft), var(--kid-blue-soft));
+    border-bottom-color: var(--kid-purple);
+    border-bottom-width: 3px;
+    padding: 16px 20px;
+  }
+  #ws-student .panel-header h2 {
+    font-size: 18px;
+    color: var(--kid-purple);
+  }
+  #ws-student .kid-mascot {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  #ws-student .kid-mascot .mascot-icon {
+    font-size: 64px;
+    display: block;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  #ws-student .kid-mascot .mascot-greeting {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--kid-purple);
+    margin-top: 4px;
+  }
+  #ws-student .kid-mascot .mascot-sub {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .kid-big-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 3px solid var(--kid-purple);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    box-shadow: 4px 4px 0px var(--kid-purple);
+    transition: all 0.12s;
+    text-align: left;
+  }
+  .kid-big-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--kid-purple);
+  }
+  .kid-big-btn.btn-login-kid {
+    background: linear-gradient(135deg, #fce7f3, #ede9fe);
+  }
+  .kid-big-btn.btn-hw-kid {
+    background: linear-gradient(135deg, #dbeafe, #d1fae5);
+  }
+  .kid-big-btn .kid-btn-emoji {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  .kid-big-btn .kid-btn-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .kid-big-btn .kid-btn-text small {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .kid-stats-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* PRESENTATION SYSTEM */
+  :root {
+    --presentation-paper: #f3efe4;
+    --presentation-navy: #34385f;
+    --presentation-blue: #9ebcf2;
+    --presentation-line: rgba(52, 56, 95, 0.14);
+    --presentation-shadow: 5px 5px 0 var(--presentation-navy);
+  }
+
+  body {
+    color: var(--presentation-navy);
+    background-color: var(--presentation-paper);
+    background-image:
+      linear-gradient(var(--presentation-line) 2px, transparent 2px),
+      linear-gradient(90deg, var(--presentation-line) 2px, transparent 2px);
+    background-size: 70px 70px;
+  }
+
+  header.site-header {
+    background: rgba(243, 239, 228, 0.96);
+    border-bottom: 0;
+    box-shadow: none;
+    padding: 28px 40px 18px;
+  }
+
+  header.site-header::after {
+    content: "";
+    display: block;
+    margin-top: 18px;
+    border-bottom: 2px solid var(--presentation-navy);
+  }
+
+  .top-meta-bar {
+    border-bottom: 0;
+    margin-bottom: 28px;
+    padding-bottom: 0;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .figma-name {
+    background: transparent;
+    color: var(--presentation-navy);
+    font-size: 18px;
+    padding: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .figma-box {
+    display: none;
+  }
+
+  .school-domain-tag {
+    display: none;
+  }
+
+  .top-meta-bar > div:last-child {
+    gap: 18px !important;
+    color: var(--presentation-navy) !important;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+  }
+
+  .page-pill {
+    background: var(--presentation-navy);
+    padding: 6px 7px 6px 15px;
+    border-radius: 999px;
+    font-size: 16px;
+    box-shadow: 3px 3px 0 rgba(52, 56, 95, 0.2);
+  }
+
+  .page-num {
+    width: 34px;
+    height: 34px;
+    color: var(--presentation-navy);
+    font-size: 14px;
+  }
+
+  h1.brand-title {
+    color: var(--presentation-navy);
+    font-size: clamp(30px, 4vw, 58px);
+    letter-spacing: -0.055em;
+    line-height: 0.95;
+  }
+
+  .pill-for-school {
+    background: #303030;
+    padding: 8px 20px;
+    font-size: clamp(16px, 1.8vw, 25px);
+    transform: rotate(-4deg);
+  }
+
+  .header-user-badge {
+    background: rgba(255, 255, 255, 0.56);
+    border: 2px solid var(--presentation-navy);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--presentation-navy);
+  }
+
+  button.btn {
+    border-color: var(--presentation-navy);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--presentation-navy);
+  }
+
+  button.btn:hover {
+    box-shadow: 5px 5px 0 var(--presentation-navy);
+  }
+
+  button.primary {
+    background: var(--presentation-navy);
+  }
+
+  button.ok {
+    background: var(--presentation-blue);
+    color: var(--presentation-navy);
+    border-color: var(--presentation-navy);
+    box-shadow: 3px 3px 0 var(--presentation-navy);
+  }
+
+  .modal-overlay {
+    background: rgba(52, 56, 95, 0.42);
+    backdrop-filter: blur(7px);
+  }
+
+  .login-card {
+    max-width: 1080px;
+    background: var(--presentation-paper);
+    border: 2px solid var(--presentation-navy);
+    border-radius: 2px;
+    box-shadow: 9px 9px 0 var(--presentation-navy);
+    padding: clamp(24px, 4vw, 48px);
+  }
+
+  .login-header {
+    text-align: left;
+    margin-bottom: 32px;
+  }
+
+  .login-header h2 {
+    max-width: 700px;
+    color: var(--presentation-navy);
+    font-size: clamp(30px, 5vw, 54px);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+  }
+
+  .login-header p {
+    max-width: 600px;
+    color: var(--presentation-navy);
+    font-size: 14px;
+  }
+
+  .role-grid {
+    gap: 22px;
+  }
+
+  .role-choice-card {
+    min-height: 330px;
+    border: 2px solid var(--presentation-navy);
+    border-radius: 24px;
+    padding: 28px 22px 22px;
+    background: rgba(255, 255, 255, 0.52);
+    box-shadow: var(--presentation-shadow);
+  }
+
+  .role-choice-card:nth-child(2) {
+    background: #e8ecff;
+    border-color: #5270e5;
+    box-shadow: 5px 5px 0 #5270e5;
+  }
+
+  .role-choice-card:hover {
+    transform: translate(-3px, -3px) rotate(-0.5deg);
+    background: #fffdf7;
+    border-color: var(--presentation-navy);
+    box-shadow: 8px 8px 0 var(--presentation-navy);
+  }
+
+  .role-icon {
+    font-size: 52px;
+    margin-bottom: 24px;
+  }
+
+  .role-choice-card h3 {
+    color: var(--presentation-navy);
+    font-size: 24px;
+    letter-spacing: -0.04em;
+  }
+
+  .role-choice-card .user-preview {
+    color: #4a68d4;
+    font-size: 15px;
+  }
+
+  .role-choice-card p {
+    color: #596078;
+    font-size: 13px;
+  }
+
+  .role-choice-card .btn {
+    border-radius: 13px;
+    padding: 12px 14px;
+    justify-content: center;
+  }
+
+  .workspace-container {
+    max-width: 1320px;
+    margin: 34px auto;
+  }
+
+  .panel-box {
+    border: 2px solid var(--presentation-navy);
+    border-radius: 24px;
+    box-shadow: var(--presentation-shadow);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .panel-header {
+    background: rgba(255, 255, 255, 0.35);
+    border-bottom: 2px solid var(--presentation-navy);
+    padding: 18px 22px;
+  }
+
+  .panel-header h2 {
+    color: var(--presentation-navy);
+    font-size: 20px;
+    letter-spacing: -0.03em;
+  }
+
+  .cal-day-col,
+  .cal-slot-card,
+  .preset-chip {
+    border-color: var(--presentation-navy);
+    border-radius: 16px;
+  }
+
+  .cal-day-name {
+    background: var(--presentation-navy);
+  }
+
+  .bubble {
+    border-color: var(--presentation-navy);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 var(--presentation-navy);
+  }
+
+  @media (max-width: 760px) {
+    header.site-header {
+      padding: 20px 18px 14px;
+    }
+
+    .top-meta-bar > div:last-child {
+      gap: 8px !important;
+      font-size: 12px;
+    }
+
+    .main-header-row {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .header-user-badge {
+      display: none;
+    }
+
+    .teacher-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .role-choice-card {
+      min-height: 280px;
+    }
+  }
+
+  /* STUDENT PRESENTATION SLIDE */
+  #ws-student {
+    --student-purple: #7a35ed;
+    --student-purple-dark: #6330c4;
+    --student-lilac: #e5e9ff;
+    --student-pink: #f5e5fb;
+    --student-mint: #d7f8e9;
+    --student-blue: #dcecff;
+    max-width: 1320px;
+    margin-top: 36px;
+  }
+
+  #ws-student .teacher-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(330px, 0.94fr);
+    gap: 20px;
+  }
+
+  #ws-student .panel-box {
+    border: 3px solid var(--student-purple);
+    border-radius: 24px;
+    box-shadow: 6px 6px 0 var(--student-purple-dark);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  #ws-student .panel-header {
+    min-height: 62px;
+    padding: 14px 22px;
+    background: linear-gradient(110deg, var(--student-lilac), #d9e8ff);
+    border-bottom: 3px solid var(--student-purple);
+  }
+
+  #ws-student .panel-header h2 {
+    color: var(--student-purple);
+    font-size: 19px;
+    letter-spacing: -0.035em;
+  }
+
+  #ws-student .panel-header .badge-tag {
+    border: 1.5px solid var(--student-purple) !important;
+    border-radius: 6px;
+    color: var(--student-purple) !important;
+    background: transparent !important;
+  }
+
+  #ws-student .kid-mascot {
+    margin: 20px 0 18px;
+  }
+
+  #ws-student .kid-mascot .mascot-icon {
+    font-size: 58px;
+    animation: none;
+  }
+
+  #ws-student .kid-mascot .mascot-greeting {
+    margin-top: 6px;
+    color: var(--student-purple);
+    font-size: 24px;
+  }
+
+  #ws-student .kid-mascot .mascot-sub {
+    color: #777b8d;
+    font-size: 13px;
+  }
+
+  #ws-student .kid-big-btn {
+    min-height: 84px;
+    margin-bottom: 12px;
+    padding: 14px 22px;
+    border: 3px solid var(--student-purple);
+    border-radius: 17px;
+    box-shadow: 4px 5px 0 var(--student-purple);
+  }
+
+  #ws-student .kid-big-btn.btn-login-kid {
+    background: linear-gradient(105deg, var(--student-pink), #eee4ff);
+  }
+
+  #ws-student .kid-big-btn.btn-hw-kid {
+    background: linear-gradient(105deg, var(--student-blue), var(--student-mint));
+  }
+
+  #ws-student .kid-big-btn .kid-btn-emoji {
+    font-size: 30px;
+  }
+
+  #ws-student .kid-big-btn .kid-btn-text {
+    color: #2f3454;
+    font-size: 16px;
+  }
+
+  #ws-student .kid-big-btn .kid-btn-text small {
+    color: #73778a;
+    font-size: 11px;
+  }
+
+  #ws-student .kid-stats-row {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  #ws-student .kid-stat-card {
+    padding: 12px 8px;
+    border: 2.5px solid var(--student-purple);
+    border-radius: 15px;
+    box-shadow: 3px 4px 0 var(--student-purple);
+  }
+
+  #ws-student .kid-stat-card .stat-emoji {
+    font-size: 27px;
+  }
+
+  #ws-student .kid-stat-card .stat-val {
+    color: var(--student-purple);
+    font-size: 20px;
+  }
+
+  #ws-student .kid-stat-card .stat-label {
+    color: #6b7084;
+  }
+
+  #ws-student .chat-box {
+    height: 600px;
+  }
+
+  #ws-student .chat-stream {
+    padding: 18px 20px;
+    background:
+      linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)),
+      repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 28px,
+        rgba(122, 53, 237, 0.09) 28px,
+        rgba(122, 53, 237, 0.09) 29px
+      );
+  }
+
+  #ws-student .bubble {
+    max-width: 94%;
+    border: 2.5px solid var(--student-purple);
+    border-radius: 20px;
+    box-shadow: 3px 4px 0 var(--student-purple-dark);
+    font-size: 14px;
+  }
+
+  #ws-student .b-ai {
+    background: linear-gradient(135deg, #e6e9ff, #f1e7ff);
+    border-left: 0;
+  }
+
+  #ws-student .chat-actions-bar {
+    padding: 12px 14px 14px;
+    border-top: 3px solid var(--student-purple);
+    background: rgba(255,255,255,.8);
+  }
+
+  #ws-student .chat-actions-bar > div {
+    align-items: center;
+  }
+
+  #ws-student .chat-actions-bar input {
+    min-width: 0;
+    border: 2.5px solid var(--student-purple);
+    border-radius: 14px;
+    color: #333752;
+    background: #fff;
+  }
+
+  #ws-student .chat-actions-bar .btn.primary {
+    background: var(--student-purple);
+    border-color: var(--student-purple-dark);
+    box-shadow: 3px 3px 0 var(--student-purple-dark);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 860px) {
+    #ws-student .teacher-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #ws-student .chat-box {
+      height: 480px;
+    }
+  }
+
+  /* Match the presentation palette across the student profile. */
+  #ws-student {
+    --kid-purple: #34385f;
+    --kid-purple-soft: #e8ecf7;
+    --kid-blue: #9ebcf2;
+    --kid-blue-soft: #e8f0fc;
+    --kid-pink-soft: #f3eee4;
+    --kid-green-soft: #e3f1ea;
+  }
+
+  #ws-student .panel-box {
+    border-color: #34385f;
+    box-shadow: 6px 6px 0 #34385f;
+  }
+
+  #ws-student .panel-header {
+    background: linear-gradient(110deg, #e8ecf7, #dce8f8);
+    border-bottom-color: #34385f;
+  }
+
+  #ws-student .panel-header h2,
+  #ws-student .kid-mascot .mascot-greeting,
+  #ws-student .kid-stat-card .stat-val {
+    color: #34385f;
+  }
+
+  #ws-student .panel-header .badge-tag {
+    border-color: #34385f !important;
+    color: #34385f !important;
+  }
+
+  #ws-student .kid-big-btn,
+  #ws-student .kid-stat-card,
+  #ws-student .bubble {
+    border-color: #34385f;
+    box-shadow: 4px 5px 0 #34385f;
+  }
+
+  #ws-student .kid-big-btn.btn-login-kid {
+    background: linear-gradient(105deg, #f3eee4, #e8ecf7);
+  }
+
+  #ws-student .kid-big-btn.btn-hw-kid {
+    background: linear-gradient(105deg, #e8f0fc, #e3f1ea);
+  }
+
+  #ws-student .chat-stream {
+    background:
+      linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)),
+      repeating-linear-gradient(180deg, transparent 0, transparent 28px,
+      rgba(52,56,95,.09) 28px, rgba(52,56,95,.09) 29px);
+  }
+
+  #ws-student .bubble {
+    box-shadow: 3px 4px 0 #34385f;
+  }
+
+  #ws-student .b-ai {
+    background: linear-gradient(135deg, #e8ecf7, #e8f0fc);
+  }
+
+  #ws-student .chat-actions-bar {
+    border-top-color: #34385f;
+  }
+
+  #ws-student .chat-actions-bar input {
+    border-color: #34385f;
+  }
+
+  #ws-student .chat-actions-bar .btn.primary {
+    background: #34385f;
+    border-color: #34385f;
+    box-shadow: 3px 3px 0 #20233f;
+  }
+  .kid-stat-card {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+    border: 2.5px solid var(--kid-purple);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 3px 3px 0px var(--kid-purple);
+  }
+  .kid-stat-card .stat-emoji { font-size: 28px; display: block; margin-bottom: 4px; }
+  .kid-stat-card .stat-val { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 900; color: var(--kid-purple); }
+  .kid-stat-card .stat-label { font-size: 11px; font-weight: 700; color: #6b7280; margin-top: 2px; }
+
+  /* Kid chat bubbles */
+  #ws-student .bubble {
+    border-radius: 18px;
+    border-width: 2.5px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  #ws-student .b-user {
+    background: var(--kid-yellow-soft);
+    border-color: var(--kid-purple);
+  }
+  #ws-student .b-ai {
+    background: linear-gradient(135deg, var(--kid-purple-soft), var(--kid-blue-soft));
+    border-color: var(--kid-purple);
+    border-left: 5px solid var(--kid-purple);
+  }
+  #ws-student .chat-stream {
+    background: repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 28px,
+      rgba(124, 58, 237, 0.06) 28px,
+      rgba(124, 58, 237, 0.06) 29px
+    );
+  }
+  #ws-student .chat-actions-bar {
+    border-top-color: var(--kid-purple);
+    border-top-width: 3px;
+  }
+  #ws-student .chat-actions-bar input {
+    border: 2.5px solid var(--kid-purple);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    outline: none;
+  }
+  #ws-student .chat-actions-bar input:focus {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  }
+  #ws-student .chat-actions-bar .btn.primary {
+    background: var(--kid-purple);
+    border-color: var(--kid-purple);
+    border-radius: 12px;
+    font-size: 15px;
+    padding: 10px 20px;
+  }
+
+  /* Final student slide overrides: keep these after the legacy kid theme. */
+  #ws-student {
+    --kid-purple: #7a35ed;
+    --kid-purple-soft: #e5e9ff;
+    max-width: 1320px;
+    margin-top: 36px;
+  }
+
+  #ws-student .teacher-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(330px, .94fr);
+    gap: 20px;
+  }
+
+  #ws-student .panel-box {
+    border: 3px solid #7a35ed;
+    border-radius: 24px;
+    box-shadow: 6px 6px 0 #6330c4;
+    background: rgba(255, 255, 255, .7);
+  }
+
+  #ws-student .panel-header {
+    min-height: 62px;
+    padding: 14px 22px;
+    background: linear-gradient(110deg, #e5e9ff, #d9e8ff);
+    border-bottom: 3px solid #7a35ed;
+  }
+
+  #ws-student .panel-header h2 {
+    color: #7a35ed;
+    font-size: 19px;
+  }
+
+  #ws-student .panel-header .badge-tag {
+    border-color: #7a35ed !important;
+    border-radius: 6px;
+    color: #7a35ed !important;
+    background: transparent !important;
+  }
+
+  #ws-student .kid-mascot {
+    margin: 20px 0 18px;
+  }
+
+  #ws-student .kid-mascot .mascot-icon {
+    font-size: 58px;
+    animation: none;
+  }
+
+  #ws-student .kid-mascot .mascot-greeting {
+    margin-top: 6px;
+    color: #7a35ed;
+    font-size: 24px;
+  }
+
+  #ws-student .kid-mascot .mascot-sub {
+    color: #777b8d;
+    font-size: 13px;
+  }
+
+  #ws-student .kid-big-btn {
+    min-height: 84px;
+    margin-bottom: 12px;
+    padding: 14px 22px;
+    border: 3px solid #7a35ed;
+    border-radius: 17px;
+    box-shadow: 4px 5px 0 #7a35ed;
+  }
+
+  #ws-student .kid-big-btn.btn-login-kid {
+    background: linear-gradient(105deg, #f5e5fb, #eee4ff);
+  }
+
+  #ws-student .kid-big-btn.btn-hw-kid {
+    background: linear-gradient(105deg, #dcecff, #d7f8e9);
+  }
+
+  #ws-student .kid-big-btn .kid-btn-text {
+    color: #2f3454;
+    font-size: 16px;
+  }
+
+  #ws-student .kid-stats-row {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  #ws-student .kid-stat-card {
+    padding: 12px 8px;
+    border: 2.5px solid #7a35ed;
+    border-radius: 15px;
+    box-shadow: 3px 4px 0 #7a35ed;
+  }
+
+  #ws-student .kid-stat-card .stat-val {
+    color: #7a35ed;
+  }
+
+  #ws-student .chat-box {
+    height: 600px;
+  }
+
+  #ws-student .chat-stream {
+    padding: 18px 20px;
+    background:
+      linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)),
+      repeating-linear-gradient(180deg, transparent 0, transparent 28px,
+      rgba(122,53,237,.09) 28px, rgba(122,53,237,.09) 29px);
+  }
+
+  #ws-student .bubble {
+    max-width: 94%;
+    border: 2.5px solid #7a35ed;
+    border-radius: 20px;
+    box-shadow: 3px 4px 0 #6330c4;
+    font-size: 14px;
+  }
+
+  #ws-student .b-ai {
+    background: linear-gradient(135deg, #e6e9ff, #f1e7ff);
+    border-left: 0;
+  }
+
+  #ws-student .chat-actions-bar {
+    padding: 12px 14px 14px;
+    border-top: 3px solid #7a35ed;
+    background: rgba(255,255,255,.8);
+  }
+
+  #ws-student .chat-actions-bar input {
+    min-width: 0;
+    border: 2.5px solid #7a35ed;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  #ws-student .chat-actions-bar .btn.primary {
+    background: #7a35ed;
+    border-color: #6330c4;
+    box-shadow: 3px 3px 0 #6330c4;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 860px) {
+    #ws-student .teacher-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #ws-student .chat-box {
+      height: 480px;
+    }
+  }
+
+  /* Final presentation palette for the student workspace. */
+  #ws-student {
+    --kid-purple: #34385f;
+    --kid-purple-soft: #e8ecf7;
+    --kid-blue: #9ebcf2;
+    --kid-blue-soft: #e8f0fc;
+    --kid-pink-soft: #f3eee4;
+    --kid-green-soft: #e3f1ea;
+  }
+
+  #ws-student .panel-box {
+    border-color: #34385f;
+    box-shadow: 6px 6px 0 #34385f;
+  }
+
+  #ws-student .panel-header {
+    background: linear-gradient(110deg, #e8ecf7, #dce8f8);
+    border-bottom-color: #34385f;
+  }
+
+  #ws-student .panel-header h2,
+  #ws-student .kid-mascot .mascot-greeting,
+  #ws-student .kid-stat-card .stat-val {
+    color: #34385f;
+  }
+
+  #ws-student .panel-header .badge-tag {
+    border-color: #34385f !important;
+    color: #34385f !important;
+  }
+
+  #ws-student .kid-big-btn,
+  #ws-student .kid-stat-card,
+  #ws-student .bubble {
+    border-color: #34385f;
+    box-shadow: 4px 5px 0 #34385f;
+  }
+
+  #ws-student .kid-big-btn.btn-login-kid {
+    background: linear-gradient(105deg, #f3eee4, #e8ecf7);
+  }
+
+  #ws-student .kid-big-btn.btn-hw-kid {
+    background: linear-gradient(105deg, #e8f0fc, #e3f1ea);
+  }
+
+  #ws-student .chat-stream {
+    background:
+      linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)),
+      repeating-linear-gradient(180deg, transparent 0, transparent 28px,
+      rgba(52,56,95,.09) 28px, rgba(52,56,95,.09) 29px);
+  }
+
+  #ws-student .bubble {
+    box-shadow: 3px 4px 0 #34385f;
+  }
+
+  #ws-student .b-ai {
+    background: linear-gradient(135deg, #e8ecf7, #e8f0fc);
+  }
+
+  #ws-student .chat-actions-bar {
+    border-top-color: #34385f;
+  }
+
+  #ws-student .chat-actions-bar input {
+    border-color: #34385f;
+  }
+
+  #ws-student .chat-actions-bar .btn.primary {
+    background: #34385f;
+    border-color: #34385f;
+    box-shadow: 3px 3px 0 #20233f;
   }
 </style>
 </head>
@@ -1068,46 +1992,81 @@
       <div class="chat-actions-bar">
         <div style="display:flex; gap:8px;">
           <input type="text" id="parent-chat-input" placeholder="Напишіть запит..." style="flex:1;">
-          <button class="btn primary" onclick="parentSendCustom()">Надіслати</button>
+          <button id="parent-send-button" class="btn primary" onclick="parentSendCustom()">Надіслати</button>
         </div>
       </div>
     </div>
   </div>
 </main>
 
-<!-- 3. STUDENT WORKSPACE -->
+<!-- 3. STUDENT WORKSPACE (CHILD-FRIENDLY 🎮) -->
 <main id="ws-student" class="workspace-container" style="display:none;">
   <div class="teacher-grid">
     <div class="panel-box">
       <div class="panel-header">
-        <h2>👨‍🎓 Кабінет Учня: Денис Коваль (2 клас)</h2>
-        <span class="badge-tag" style="background:#d1fae5; color:#065f46;">Курс: Math Kids</span>
+        <h2>🌟 Мій кабінет: Денис Коваль</h2>
+        <span class="badge-tag" style="background:#ede9fe; color:#7c3aed; border-color:#7c3aed;">Math Kids · 2 клас</span>
       </div>
-      <div style="padding:18px;">
-        <h4 style="margin:0 0 8px;">Поширені запити:</h4>
-        <div class="preset-row">
-          <div class="preset-chip" onclick="studentSend('login')">🔑 Не можу увійти (не приходить SMS)</div>
-          <div class="preset-chip" onclick="studentSend('hw')">📝 Домашнє завдання не збереглося</div>
+      <div style="padding:20px;">
+        <!-- Mascot -->
+        <div class="kid-mascot">
+          <span class="mascot-icon">🤖</span>
+          <div class="mascot-greeting">Привіт, Денисе! 👋</div>
+          <div class="mascot-sub">Я — твій помічник. Якщо щось не працює — натискай кнопку!</div>
         </div>
-        <p style="color:#555f77; font-size:13px; margin-top:14px;">
-          AI миттєво діагностує статус акаунта та відновлює втрачені чернетки без очікування менеджера.
-        </p>
+
+        <!-- Big action buttons -->
+        <button class="kid-big-btn btn-login-kid" onclick="studentSend('login')">
+          <span class="kid-btn-emoji">🔑</span>
+          <span class="kid-btn-text">
+            Не можу увійти — не приходить код
+            <small>Натисни, і я допоможу зайти через email</small>
+          </span>
+        </button>
+
+        <button class="kid-big-btn btn-hw-kid" onclick="studentSend('hw')">
+          <span class="kid-btn-emoji">📝</span>
+          <span class="kid-btn-text">
+            Моє домашнє завдання зникло!
+            <small>Знайду твою роботу та відправлю вчителю</small>
+          </span>
+        </button>
+
+        <!-- Fun stats -->
+        <div class="kid-stats-row">
+          <div class="kid-stat-card">
+            <span class="stat-emoji">⭐</span>
+            <div class="stat-val">12</div>
+            <div class="stat-label">Уроків пройдено</div>
+          </div>
+          <div class="kid-stat-card">
+            <span class="stat-emoji">🏆</span>
+            <div class="stat-val">3</div>
+            <div class="stat-label">Досягнення</div>
+          </div>
+          <div class="kid-stat-card">
+            <span class="stat-emoji">🔥</span>
+            <div class="stat-val">5 днів</div>
+            <div class="stat-label">Серія навчання</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="panel-box chat-box">
       <div class="panel-header">
-        <h2>💬 Чат підтримки для учнів</h2>
+        <h2>🤖 Чат з помічником</h2>
       </div>
       <div class="chat-stream" id="student-chat">
         <div class="bubble b-ai">
-          Привіт, Денисе! Якщо виникли труднощі з уроком чи входом — напиши мені.
+          <b>🤖 Помічник:</b><br>
+          Привіт, Денисе! 🌟 Я тут, щоб допомогти тобі! Якщо є проблема — просто напиши або натисни кнопку зліва 👈
         </div>
       </div>
       <div class="chat-actions-bar">
         <div style="display:flex; gap:8px;">
-          <input type="text" id="student-chat-input" placeholder="Повідомлення..." style="flex:1;">
-          <button class="btn primary" onclick="studentSendCustom()">Надіслати</button>
+          <input type="text" id="student-chat-input" placeholder="Напиши мені... 💬" style="flex:1;">
+          <button id="student-send-button" class="btn primary" onclick="studentSendCustom()">Надіслати 🚀</button>
         </div>
       </div>
     </div>
@@ -1720,33 +2679,56 @@ async function teacherResolveConflict() {
 }
 
 /* PARENT WORKSPACE */
+function addChatBubble(chat, className, label, text) {
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${className}`;
+  bubble.innerHTML = `<b>${esc(label)}:</b><br>${esc(text)}`;
+  chat.appendChild(bubble);
+  chat.scrollTop = chat.scrollHeight;
+  return bubble;
+}
+
+async function sendRoleChat(role, chatId, inputId, message, label) {
+  const chat = $(chatId);
+  const input = $(inputId);
+  const text = message.trim();
+  if (!text) return;
+
+  if (input) {
+    input.value = '';
+    input.disabled = true;
+  }
+  addChatBubble(chat, 'b-user', label, text);
+  const pending = addChatBubble(chat, 'b-ai', 'AI', 'Перевіряю інформацію…');
+  pending.classList.add('chat-pending');
+
+  try {
+    const res = await api('/role-chat', {
+      method: 'POST',
+      body: JSON.stringify({ role, message: text })
+    });
+    pending.remove();
+    addChatBubble(chat, 'b-ai', 'AI Support Agent', res.ai_reply || 'Не вдалося отримати відповідь.');
+  } catch (error) {
+    pending.remove();
+    addChatBubble(chat, 'b-ai chat-error', 'Система', 'Не вдалося надіслати повідомлення. Спробуйте ще раз.');
+    console.error('Role chat request failed', error);
+  } finally {
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
+  }
+}
+
 async function parentSend(type) {
   const msg = type === 'pay' 
     ? "Півгодини тому сплатила пакет на 8 уроків (2,400 грн), з картки гроші списало, а баланс досі 0 занять!" 
     : "Хочу додати другу доньку (Марію, 6 років) до мого кабінету, але видає помилку.";
-  
-  const chat = $('parent-chat');
-  chat.innerHTML += `<div class="bubble b-user"><b>Ви:</b><br>${esc(msg)}</div>`;
-  
-  const res = await api('/role-chat', {
-    method: 'POST',
-    body: JSON.stringify({ role: 'parent', message: msg })
-  });
-
-  chat.innerHTML += `<div class="bubble b-ai"><b>AI Support Agent:</b><br>${esc(res.ai_reply)}</div>`;
-  chat.scrollTop = chat.scrollHeight;
+  await sendRoleChat('parent', 'parent-chat', 'parent-chat-input', msg, 'Ви');
 }
 function parentSendCustom() {
-  const val = $('parent-chat-input').value.trim();
-  if (!val) return;
-  $('parent-chat-input').value = '';
-  const chat = $('parent-chat');
-  chat.innerHTML += `<div class="bubble b-user"><b>Ви:</b><br>${esc(val)}</div>`;
-  api('/role-chat', { method: 'POST', body: JSON.stringify({ role: 'parent', message: val }) })
-    .then(r => {
-      chat.innerHTML += `<div class="bubble b-ai"><b>AI Support Agent:</b><br>${esc(r.ai_reply)}</div>`;
-      chat.scrollTop = chat.scrollHeight;
-    });
+  sendRoleChat('parent', 'parent-chat', 'parent-chat-input', $('parent-chat-input').value, 'Ви');
 }
 
 /* STUDENT WORKSPACE */
@@ -1754,27 +2736,20 @@ async function studentSend(type) {
   const msg = type === 'login'
     ? "Не можу увійти в свій кабінет, не приходить код SMS на телефон."
     : "Вчора здав домашнє завдання з математики, а в кабінеті пише, що не здано!";
-  const chat = $('student-chat');
-  chat.innerHTML += `<div class="bubble b-user"><b>Денис:</b><br>${esc(msg)}</div>`;
-  const res = await api('/role-chat', {
-    method: 'POST',
-    body: JSON.stringify({ role: 'student', message: msg })
-  });
-  chat.innerHTML += `<div class="bubble b-ai"><b>AI:</b><br>${esc(res.ai_reply)}</div>`;
-  chat.scrollTop = chat.scrollHeight;
+  await sendRoleChat('student', 'student-chat', 'student-chat-input', msg, 'Денис');
 }
 function studentSendCustom() {
-  const val = $('student-chat-input').value.trim();
-  if (!val) return;
-  $('student-chat-input').value = '';
-  const chat = $('student-chat');
-  chat.innerHTML += `<div class="bubble b-user"><b>Денис:</b><br>${esc(val)}</div>`;
-  api('/role-chat', { method: 'POST', body: JSON.stringify({ role: 'student', message: val }) })
-    .then(r => {
-      chat.innerHTML += `<div class="bubble b-ai"><b>AI:</b><br>${esc(r.ai_reply)}</div>`;
-      chat.scrollTop = chat.scrollHeight;
-    });
+  sendRoleChat('student', 'student-chat', 'student-chat-input', $('student-chat-input').value, 'Денис');
 }
+
+['parent-chat-input', 'student-chat-input'].forEach(inputId => {
+  $(inputId).addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      $(inputId === 'parent-chat-input' ? 'parent-send-button' : 'student-send-button').click();
+    }
+  });
+});
 
 /* ADMIN WORKSPACE */
 async function loadAdminQueue() {
@@ -1803,13 +2778,19 @@ async function loadAdminQueue() {
 }
 
 async function adminApprove(id) {
-  await api('/admin/escalations/' + id + '/resolve', { method: 'POST' });
-  await loadAdminQueue();
-  if (id === 'ESC-102') {
-    await teacherSyncStaleStatus();
-    alert('Тікет ESC-102 успішно затверджено адміністратором! Слот у розкладі викладача звільнено.');
-  } else {
-    alert('Тікет ' + id + ' успішно затверджено адміністратором! Баланс поповнено.');
+  try {
+    const esc = await api('/admin/escalations/' + id + '/resolve', { method: 'POST' });
+    await loadAdminQueue();
+    if (id === 'ESC-102') {
+      await teacherSyncStaleStatus();
+      alert('Тікет ESC-102 успішно затверджено адміністратором! ' + esc.resolution_note);
+    } else {
+      alert('Тікет ' + id + ' затверджено. ' + esc.resolution_note);
+    }
+  } catch (error) {
+    console.error('Escalation resolve failed', error);
+    alert('Не вдалося затвердити тікет ' + id + '. Спробуйте ще раз.');
+  }
   }
 }
 

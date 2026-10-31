@@ -7,14 +7,14 @@ AI не відповідає, а **розуміє справжню мету уч
 
 ## Стек
 - Бекенд: Python 3.11+, FastAPI, pydantic, in-memory store (без БД — це MVP)
-- AI: Anthropic API (`ANTHROPIC_API_KEY`, модель з `LLM_MODEL`), **завжди є rule-based fallback**, щоб демо працювало без ключа/інтернету
+- AI: Google Gemini API (`GEMINI_API_KEY`, модель з `LLM_MODEL`), **завжди є rule-based fallback**, щоб демо працювало без ключа/інтернету
 - Фронтенд: один файл `static/index.html` (vanilla JS), без збірки
 - Тести: pytest + FastAPI TestClient
 
 ## Команди
 ```bash
 pip install -r requirements.txt
-cp .env.example .env            # опційно: додати ANTHROPIC_API_KEY
+cp .env.example .env            # опційно: додати GEMINI_API_KEY
 uvicorn app.main:app --reload   # http://localhost:8000
 pytest -q
 ```

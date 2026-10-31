@@ -144,7 +144,7 @@ TEAMS = {"billing", "tech", "curator"}
 
 def _chk_escalate(s, a):
     team = a.get("team", "curator")
-    _need(team in TEAMS, f"Невідома команда: {team}")
+    _need(isinstance(team, str) and team in TEAMS, f"Невідома команда: {team}")
 
 
 def _run_escalate(s, a):
