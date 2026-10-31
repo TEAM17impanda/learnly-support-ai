@@ -18,7 +18,7 @@ tests/         pytest (agent, tools, api, quality)
 
 ## Конфігурація (`.env`)
 - `GEMINI_API_KEY` — вмикає LLM-шлях; без нього лише правила
-- `LLM_MODEL` — за замовчуванням `gemini-2.5-flash`
+- `LLM_MODEL` — за замовчуванням `gemini-3.5-flash-lite`
 - `AUTONOMY` — `copilot` | `auto_low_risk`
 
 ## Запуск

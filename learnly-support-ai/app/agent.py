@@ -355,7 +355,7 @@ def _gemini(system: str, content: str, json_mode: bool, max_tokens: int = 2048) 
 
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"),
                           http_options=genai.types.HttpOptions(timeout=25_000))  # мс
-    model = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+    model = os.getenv("LLM_MODEL", "gemini-3.5-flash-lite")
     # у 2.5-flash «думання» з'їдає max_output_tokens і JSON обрізається — вимикаємо (ще й швидше)
     thinking = (genai.types.ThinkingConfig(thinking_budget=0)
                 if model.startswith("gemini-2.5-flash") else None)
