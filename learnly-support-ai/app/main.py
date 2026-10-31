@@ -828,6 +828,15 @@ def admin_escalations(status: str | None = None, priority: str | None = None,
     return sorted(items, key=_esc_sort_key)
 
 
+@app.get("/api/my-account")
+def my_account(role: str):
+    """Кабінет користувача бачить свій баланс (це UI самого користувача, не доступ агента)."""
+    acc = STATE.school["accounts"].get(ROLE_ACCOUNTS.get(role, ""))
+    if not acc:
+        raise HTTPException(404, "Акаунт не знайдено")
+    return {"name": acc["name"], "email": acc["email"], "lessons_balance": acc["lessons_balance"]}
+
+
 @app.get("/api/mcp/tools")
 def mcp_tools():
     """Що агенту дозволено: інструменти, доступ, поля; які поля приховані."""

@@ -2,6 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI CUSTOMER SUPPORTER for school | Brighterly Copilot (Learnly Engine)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -746,6 +747,7 @@
     background: #f4f0ea;
     white-space: nowrap;
     width: 40%;
+  }
 
 /* =========== CHILD-FRIENDLY STUDENT WORKSPACE =========== */
   #ws-student {
@@ -1795,6 +1797,11 @@
   .mcp-list li { margin-bottom: 3px; }
   .mcp-list li.denied { color: var(--red); }
   .mcp-list code { font-size: 11.5px; background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }
+  /* =========== POLISH: переноси, сітка тижня, відступи =========== */
+  .main-header-row button.btn, .header-user-badge .user-name-title { white-space: nowrap; }
+  .calendar-days { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .escalation-table td:first-child { white-space: nowrap; }
+  .admin-actions { margin-bottom: 14px; }
 </style>
 </head>
 <body>
@@ -1803,18 +1810,12 @@
 <header class="site-header">
   <div class="top-meta-bar">
     <div class="figma-tag">
-      <span class="figma-box">Hanover and Tyke</span>
+      <span class="figma-box">Learnly · онлайн-школа (демо)</span>
     </div>
 
     <div style="display:flex; align-items:center; gap: 12px;">
-      <a href="https://brighterly.com/" target="_blank" rel="noopener" class="school-domain-tag">
-        https://brighterly.com/
-      </a>
-      <span style="font-weight: 800; color: var(--ink);">Presented by Team17</span>
-      <div class="page-pill">
-        <span>Page</span>
-        <span class="page-num">01</span>
-      </div>
+      <span class="school-domain-tag">MCP-шлюз · policy-guard · аудит</span>
+      <span style="font-weight: 800; color: var(--ink);">PolyTech Code Fest · Team17</span>
     </div>
   </div>
 
@@ -2086,7 +2087,7 @@
         <span class="badge-tag">Дитина: Софія (5 клас)</span>
       </div>
       <div style="padding:18px;">
-        <h4 style="margin:0 0 8px;">Швидкі типові ситуації (з ТЗ):</h4>
+        <h4 style="margin:0 0 8px;">Швидкі типові ситуації:</h4>
         <div class="preset-row">
           <div class="preset-chip" onclick="parentSend('pay')">💸 Оплата 2,400 грн пройшла, але уроки не з'явилися</div>
           <div class="preset-chip" onclick="parentSend('sibling')">👶 Не вдається додати другу дитину до акаунта</div>
@@ -2095,9 +2096,10 @@
         <div style="border:1.5px solid var(--ink); border-radius:10px; padding:14px; background:#fff; margin-top:14px;">
           <h4 style="margin:0 0 6px;">Баланс і підписка:</h4>
           <div style="font-size:13px; line-height:1.6;">
+            • Акаунт: <b id="parent-email">oksana.shevchenko@gmail.com</b><br>
             • Активний пакет: <b>Math & Logic (5 клас)</b><br>
-            • Баланс занять у кабінеті: <b style="color:var(--red);">0 занять</b><br>
-            • Остання транзакція в банку: <b>TX-9842 на суму 2,400 грн (Monobank) — Успішно о 12:15</b>
+            • Баланс занять у кабінеті: <b id="parent-balance" style="color:var(--red);">0 занять</b><br>
+            • Остання оплата з картки *4417: <b>2 400 грн, сьогодні 13:42 — списано банком</b>
           </div>
         </div>
       </div>
@@ -2874,7 +2876,7 @@ async function teacherResolveConflict() {
 function addChatBubble(chat, className, label, text) {
   const bubble = document.createElement('div');
   bubble.className = `bubble ${className}`;
-  bubble.innerHTML = `<b>${esc(label)}:</b><br>${esc(text)}`;
+  bubble.innerHTML = `<b>${esc(label)}:</b><br>${esc(text).replace(/\n/g, '<br>')}`;
   chat.appendChild(bubble);
   chat.scrollTop = chat.scrollHeight;
   return bubble;
@@ -2902,7 +2904,7 @@ async function sendRoleChat(role, chatId, inputId, message, label) {
     pending.remove();
     if (res.checks?.length) {  // що агент реально перевірив через MCP-шлюз
       addChatBubble(chat, 'b-ai mcp-trace', '🔎 Перевірки через MCP',
-        res.checks.map(c => `${c.ok ? '✓' : '⛔'} ${c.tool}: ${c.summary}`).join('\n'));
+        res.checks.map(c => `${c.ok ? '✓' : '⛔'} ${c.tool}: ${c.summary.replace(/^⛔\s*/, '')}`).join('\n'));
     }
     addChatBubble(chat, 'b-ai', 'AI Support Agent', res.ai_reply || 'Не вдалося отримати відповідь.');
   } catch (error) {
@@ -3061,7 +3063,7 @@ async function showEscalation(id) {
     ${field('Перевірений контекст', esc(t.verified_context))}
     ${t.agent_checks?.length
       ? field('Що перевірив агент (виклики MCP)', `<ul class="mcp-list">${t.agent_checks.map(c =>
-          `<li class="${c.ok ? '' : 'denied'}"><code>${esc(c.tool)}(${esc(Object.entries(c.args).map(([k, v]) => k + '=' + v).join(', '))})</code> → ${esc(c.summary)}</li>`).join('')}</ul>`)
+          `<li class="${c.ok ? '' : 'denied'}">${c.ok ? '✓' : '⛔'} <code>${esc(c.tool)}(${esc(Object.entries(c.args).map(([k, v]) => k + '=' + v).join(', '))})</code> → ${esc(c.summary.replace(/^⛔\s*/, ''))}</li>`).join('')}</ul>`)
       : field('Що вже перевірив AI', esc(t.checked_by_ai))}
     ${t.proposed_fix ? field('Готове рішення від агента', `<div class="admin-quote" style="font-style:normal;">🛠️ ${esc(t.proposed_fix.title)}<br><span class="admin-muted" style="font-size:12px;">Виконається через MCP від імені адміністратора після натискання кнопки</span></div>`) : ''}
     ${field('Причина ескалації', esc(t.escalation_reason))}
@@ -3114,7 +3116,16 @@ async function loadAuditLog() {
 
 /* Рішення адміністратора повертаються в чат користувача */
 const ROLE_CHATS = { teacher: 'teacher-chat', parent: 'parent-chat', student: 'student-chat' };
+async function refreshParentBalance() {
+  try {
+    const acc = await api('/my-account?role=parent');
+    $('parent-balance').textContent = `${acc.lessons_balance} занять`;
+    $('parent-balance').style.color = acc.lessons_balance > 0 ? 'var(--green)' : 'var(--red)';
+  } catch (error) { /* панель лишається зі статичним значенням */ }
+}
+
 async function deliverAdminUpdates(role) {
+  if (role === 'parent') refreshParentBalance();
   if (!ROLE_CHATS[role]) return;
   try {
     const updates = await api('/role-chat/updates?role=' + role, { method: 'POST' });
