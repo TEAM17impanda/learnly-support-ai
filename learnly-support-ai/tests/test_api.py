@@ -9,7 +9,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def clean(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     client.post("/api/reset")
     client.post("/api/settings", json={"autonomy": "copilot"})
 
@@ -102,6 +102,19 @@ def test_unknown_student_and_ticket():
 
 def test_empty_message_rejected():
     assert client.post("/api/tickets", json={"student_id": "s1", "message": ""}).status_code == 422
+    assert client.post("/api/tickets", json={"student_id": "s1", "message": "   "}).status_code == 422
+
+
+def test_blank_follow_up_and_reply_rejected():
+    t = new_ticket("s1", "Хочу повернути гроші")
+    assert client.post(f"/api/tickets/{t['id']}/messages",
+                       json={"role": "student", "text": "   "}).status_code == 422
+    assert client.post(f"/api/tickets/{t['id']}/send-reply",
+                       json={"text": "   "}).status_code == 422
+
+
+def test_role_chat_rejects_unknown_role():
+    assert client.post("/api/role-chat", json={"role": "admin", "message": "Привіт"}).status_code == 422
 
 
 def test_reply_quality_is_scored_and_ai_draft_beats_rude_reply():
@@ -138,3 +151,21 @@ def test_health_and_index():
     assert client.get("/api/health").json()["ok"] is True
     page = client.get("/")
     assert page.status_code == 200 and "Learnly" in page.text
+
+
+def test_follow_up_keeps_executed_actions():
+    t = new_ticket("s1", "Хочу повернути гроші за курс")
+    a = rec_action(t)
+    client.post(f"/api/tickets/{t['id']}/actions/{a['id']}/approve")
+    r = client.post(f"/api/tickets/{t['id']}/messages",
+                    json={"role": "student", "text": "Дякую! А сертифікат буде?"}).json()
+    kept = next(x for x in r["actions"] if x["id"] == a["id"])
+    assert kept["status"] == "executed"
+    assert client.get("/api/analytics").json()["retention"]["saved"] == 1
+
+
+def test_escalation_resolution_note_matches_problem():
+    client.post("/api/role-chat", json={"role": "parent", "message": "Хочу додати другу доньку"})
+    esc = next(e for e in client.get("/api/admin/escalations").json() if "дитини" in e["problem"])
+    note = client.post(f"/api/admin/escalations/{esc['id']}/resolve").json()["resolution_note"]
+    assert "баланс" not in note

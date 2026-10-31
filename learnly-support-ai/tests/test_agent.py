@@ -93,13 +93,13 @@ def test_time_pressure_phrase_overrides_pace(students):
 
 
 def test_analyze_falls_back_to_rules_without_api_key(students, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     r = agent.analyze(students["s1"], DEMO_MESSAGES["s1"])
     assert r["source"] == "rules"
 
 
 def test_analyze_falls_back_when_llm_fails(students, monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake")
+    monkeypatch.setenv("GEMINI_API_KEY", "fake")
     monkeypatch.setattr(agent, "llm_analyze", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     r = agent.analyze(students["s1"], DEMO_MESSAGES["s1"])
     assert r["source"] == "rules"
@@ -112,3 +112,37 @@ def test_priority_and_churn_are_bounded(students):
         r = agent.heuristic_analyze(students[sid], msg)
         assert 0 <= r["churn_risk"] <= 100
         assert r["priority"]["label"] in ("P1", "P2", "P3")
+
+
+def test_needs_time_reply_does_not_offer_unavailable_transfer(students):
+    """Олена вже переносилась і поза вікном повернення → не обіцяємо перенос «на None» і повернення."""
+    s = students["s1"]
+    s["transferred"] = True
+    s["payments"][0]["date"] = "2000-01-01"
+    r = agent.heuristic_analyze(s, DEMO_MESSAGES["s1"])
+    assert r["true_goal"] == "needs_more_time"
+    assert tools_of(r, only_recommended=True) == ["extend_deadline"]
+    assert "None" not in r["suggested_reply"]
+    assert "потік" not in r["suggested_reply"]
+    assert "оформимо повернення" not in r["suggested_reply"]
+
+
+def test_llm_clarifying_answer_without_actions_is_accepted(students, monkeypatch):
+    """Промпт дозволяє actions: [] для уточнюючого питання — це не збій LLM."""
+    monkeypatch.setattr(agent, "_extract_json", lambda text: {
+        "intent": "other", "true_goal": "unknown", "sentiment": "neutral",
+        "reasoning": "Недостатньо даних", "reply": "Уточніть, будь ласка, деталі.", "actions": []})
+
+    class FakeModels:
+        def generate_content(self, **kwargs):
+            return type("R", (), {"text": "{}"})()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.models = FakeModels()
+
+    from google import genai
+    monkeypatch.setattr(genai, "Client", FakeClient)
+    r = agent.llm_analyze(students["s1"], "Привіт")
+    assert r["source"] == "llm" and r["actions"] == []
+    assert r["reasoning"] == ["Недостатньо даних"]

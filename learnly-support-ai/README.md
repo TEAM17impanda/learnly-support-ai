@@ -5,7 +5,7 @@ AI-операційний асистент для підтримки онлай�
 ## Швидкий старт
 ```bash
 pip install -r requirements.txt
-cp .env.example .env        # ANTHROPIC_API_KEY — опційно
+cp .env.example .env        # GEMINI_API_KEY — опційно
 uvicorn app.main:app --reload
 # відкрити http://localhost:8000
 pytest -q

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 load_dotenv()
 
@@ -27,16 +27,40 @@ class NewTicket(BaseModel):
     student_id: str
     message: str = Field(min_length=1, max_length=2000)
 
+    @field_validator("message")
+    @classmethod
+    def message_is_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("message must not be blank")
+        return value
+
 
 class Message(BaseModel):
     role: str = "student"  # student | agent
     text: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("text")
+    @classmethod
+    def text_is_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("text must not be blank")
+        return value
 
 
 class Reply(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
     from_ai_draft: bool = False
     agent_name: str = "Агент"
+
+    @field_validator("text")
+    @classmethod
+    def reply_is_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("text must not be blank")
+        return value
 
 
 class Settings(BaseModel):
@@ -64,8 +88,11 @@ def _msg(t: dict, role: str, text: str, **extra):
 
 def _run_analysis(t: dict, message: str):
     s = _student(t["student_id"])
-    t["analysis"] = agent.analyze(s, message, t["messages"])
-    t["actions"] = t["analysis"].pop("actions")
+    # історія без поточного повідомлення — воно передається окремо
+    t["analysis"] = agent.analyze(s, message, t["messages"][:-1])
+    # виконані/відхилені дії лишаються в історії тікета, замінюємо лише старі пропозиції
+    t["actions"] = [a for a in t["actions"] if a["status"] != "proposed"] + t["analysis"].pop("actions")
+    t.setdefault("initial_intent", t["analysis"]["intent"])  # для retention-метрик після follow-up
     STATE.log("analysis", ticket=t["id"], intent=t["analysis"]["intent"],
               goal=t["analysis"]["true_goal"], source=t["analysis"]["source"])
     _apply_autonomy(t)
@@ -133,7 +160,7 @@ def _new_ticket(sid: str, message: str) -> dict:
 # ---------------- API ----------------
 @app.get("/api/health")
 def health():
-    return {"ok": True, "llm": bool(os.getenv("ANTHROPIC_API_KEY")), "autonomy": STATE.settings["autonomy"]}
+    return {"ok": True, "llm": bool(os.getenv("GEMINI_API_KEY")), "autonomy": STATE.settings["autonomy"]}
 
 
 @app.get("/api/students")
@@ -191,7 +218,7 @@ def send_reply(tid: str, body: Reply):
     t = _ticket(tid)
     s = _student(t["student_id"])
     q = score_reply(body.text, s)
-    _msg(t, "agent", body.text.strip(), agent=body.agent_name, quality=q, from_ai_draft=body.from_ai_draft)
+    _msg(t, "agent", body.text, agent=body.agent_name, quality=q, from_ai_draft=body.from_ai_draft)
     t["quality"].append({"agent": body.agent_name, "from_ai_draft": body.from_ai_draft, **q})
     STATE.log("reply_sent", ticket=tid, score=q["score"], from_ai_draft=body.from_ai_draft)
     return _public_ticket(t)
@@ -274,7 +301,7 @@ def analytics():
             executed += x["status"] == "executed"
             executed_ai += x["executed_by"] == "ai"
             blocked += x["status"] == "failed"
-        if a.get("intent") == "refund" and t["actions"]:
+        if t.get("initial_intent", a.get("intent")) == "refund" and t["actions"]:
             refund_reqs += 1
             done = [x for x in t["actions"] if x["status"] == "executed"]
             if any(x["tool"] in RETENTION_TOOLS for x in done) and not any(
@@ -297,16 +324,26 @@ def analytics():
         "quality": {"avg": avg(scores), "count": len(scores), "low_quality": low_quality,
                     "avg_ai_draft": avg(draft_scores), "avg_manual": avg(manual_scores)},
         "avg_open_churn_risk": avg(open_risks),
+        # історичні тікети агенти закрили без AI — не зараховуємо їх у зекономлений час
         "time_saved_min": executed * MINUTES_PER_ACTION
-                          + sum(1 for t in tickets if t["analysis"] and t["status"] != "open") * MINUTES_PER_DRAFT,
+                          + sum(1 for t in tickets if t["analysis"] and t["status"] != "open"
+                                and t["created"] != "історія") * MINUTES_PER_DRAFT,
         "note": "Оцінка часу — модельна (4 хв/дія + 2 хв/чернетка) на мок-даних.",
     }
 
 
 class RoleChatMessage(BaseModel):
-    role: str  # student | teacher | parent
+    role: str = Field(pattern="^(student|teacher|parent)$")
     scenario_id: str | None = None
     message: str
+
+    @field_validator("message")
+    @classmethod
+    def role_message_is_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("message must not be blank")
+        return value
 
 
 class ResolveBooking(BaseModel):
@@ -507,7 +544,9 @@ def resolve_escalation(esc_id: str):
     if not esc:
         raise HTTPException(404, "Тікет не знайдено")
     esc["status"] = "resolved"
-    esc["resolution_note"] = "Вирішено адміністратором: транзакцію підтверджено, заняття зараховано на баланс."
+    esc["resolution_note"] = ("Вирішено адміністратором: транзакцію підтверджено, заняття зараховано на баланс."
+                              if "оплат" in esc["problem"].lower()
+                              else "Вирішено адміністратором: запит опрацьовано вручну.")
     STATE.log("escalation_resolved", esc_id=esc_id)
     return esc
 

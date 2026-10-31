@@ -1,6 +1,6 @@
 """AI-агент: розуміє намір і справжню мету учня, пропонує дії та готує відповідь для агента підтримки.
 
-Шлях 1: LLM (Anthropic) → JSON → валідація через tools.check().
+Шлях 1: LLM (Google Gemini) → JSON → валідація через tools.check().
 Шлях 2: детермінований fallback на правилах (працює без ключа та інтернету).
 Пріоритет і churn-risk рахуємо кодом — відтворювано.
 """
@@ -9,7 +9,7 @@ import os
 import re
 
 from .context import build_context
-from .policy import POLICY_TEXT
+from .policy import MAX_EXTENSIONS, POLICY_TEXT
 from .store import STATE
 from .tools import PolicyError, TOOLS, check, tool_catalog
 
@@ -137,11 +137,30 @@ def heuristic_analyze(s: dict, message: str, history: list | None = None) -> dic
                 act("extend_deadline", {"days": 7}, "Додатковий час замість повернення", True)
             if ctx["refund_eligible"]:
                 act("request_refund", {}, "Запасний варіант, якщо учень відмовиться від пропозиції", False)
-            reply = (f"Добрий день, {name}! Розумію, що зараз складно вкласти навчання у свій графік. "
-                     f"Ви вже пройшли {ctx['lessons_done']} з {ctx['lessons_total']} уроків — це хороший старт. "
-                     f"Пропоную не повертати кошти, а перенести вас на наступний потік ({ctx['next_cohort']}) "
-                     f"без доплат — тоді навчання піде у комфортному темпі. Якщо хочете, зробимо це сьогодні; "
-                     f"якщо ні — оформимо повернення.")
+            if ctx["can_transfer"]:
+                offer = (f"перенести вас на наступний потік ({ctx['next_cohort']}) без доплат — "
+                         f"тоді навчання піде у комфортному темпі")
+            elif ctx["can_extend"]:
+                offer = "продовжити дедлайн на 7 днів, щоб ви спокійно наздогнали програму"
+            else:
+                offer = None
+            fallback = "оформимо повернення" if ctx["refund_eligible"] else "передам питання куратору"
+            if offer:
+                reply = (f"Добрий день, {name}! Розумію, що зараз складно вкласти навчання у свій графік. "
+                         f"Ви вже пройшли {ctx['lessons_done']} з {ctx['lessons_total']} уроків — це хороший старт. "
+                         f"Пропоную не повертати кошти, а {offer}. Якщо хочете, зробимо це сьогодні; "
+                         f"якщо ні — {fallback}.")
+            else:
+                if not actions:
+                    act("escalate_to_human", {"team": "curator",
+                        "reason": "Учню бракує часу, але перенос і продовження вже недоступні"},
+                        "Потрібне рішення куратора", True)
+                reply = (f"Добрий день, {name}! Розумію, що зараз складно вкласти навчання у свій графік. "
+                         f"Ви вже пройшли {ctx['lessons_done']} з {ctx['lessons_total']} уроків. "
+                         + ("Можемо оформити повернення, але спершу пропоную обговорити з куратором "
+                            "гнучкіший графік — він зв'яжеться з вами протягом дня."
+                            if ctx["refund_eligible"] else
+                            "Я передав ваше питання куратору — він запропонує варіанти протягом дня."))
         else:
             goal = "disengaged_or_mismatch"
             if ctx["refund_eligible"]:
@@ -222,7 +241,7 @@ def heuristic_analyze(s: dict, message: str, history: list | None = None) -> dic
     elif intent == "deadline":
         goal = "needs_more_time"
         if ctx["can_extend"]:
-            why.append(f"Просить більше часу; продовжень використано {ctx['extensions_used']}/2")
+            why.append(f"Просить більше часу; продовжень використано {ctx['extensions_used']}/{MAX_EXTENSIONS}")
             act("extend_deadline", {"days": 5}, "Ліміт продовжень не вичерпано", True)
             reply = (f"Добрий день, {name}! Розумію, що буває складно. Я продовжу дедлайн на 5 днів — "
                      f"наступний крок: здати завдання до нового терміну.")
@@ -287,29 +306,41 @@ def _extract_json(text: str) -> dict:
 
 
 def llm_analyze(s: dict, message: str, history: list | None = None) -> dict:
-    import anthropic  # імпорт тут, щоб fallback працював і без пакета
+    from google import genai  # імпорт тут, щоб fallback працював і без пакета
 
     ctx = build_context(s)
-    client = anthropic.Anthropic(timeout=25.0)
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"),
+                          http_options=genai.types.HttpOptions(timeout=25_000))  # мс
     payload = {
         "student": {"name": s["name"]}, "message": message,
         "chat_history": [{"role": m["role"], "text": m["text"]} for m in (history or [])][-6:],
         "context": ctx, "policy": POLICY_TEXT, "tools": tool_catalog(),
         "response_schema": JSON_SCHEMA_HINT,
     }
-    resp = client.messages.create(
-        model=os.getenv("LLM_MODEL", "claude-sonnet-5-5"), max_tokens=1200,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
+    model = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+    # у 2.5-flash «думання» з'їдає max_output_tokens і JSON обрізається — вимикаємо (ще й швидше)
+    thinking = (genai.types.ThinkingConfig(thinking_budget=0)
+                if model.startswith("gemini-2.5-flash") else None)
+    resp = client.models.generate_content(
+        model=model,
+        contents=[json.dumps(payload, ensure_ascii=False)],
+        config=genai.types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            max_output_tokens=2048,
+            response_mime_type="application/json",
+            thinking_config=thinking,
+        ),
     )
-    data = _extract_json("".join(b.text for b in resp.content if getattr(b, "type", "") == "text"))
+    data = _extract_json(resp.text or "")
 
     intent = data.get("intent") if data.get("intent") in INTENTS else detect_intent(message)
     goal = data.get("true_goal") if data.get("true_goal") in GOALS else "unknown"
     sentiment = data.get("sentiment") if data.get("sentiment") in SENTIMENTS else "neutral"
 
     actions = []
-    for a in data.get("actions", []):
+    for a in data.get("actions") or []:
+        if not isinstance(a, dict):
+            continue
         tool, args = a.get("tool"), a.get("args") or {}
         if tool not in TOOLS or not isinstance(args, dict):
             continue
@@ -319,22 +350,26 @@ def llm_analyze(s: dict, message: str, history: list | None = None) -> dict:
             continue
         actions.append(make_action(tool, args, str(a.get("rationale", "")), bool(a.get("recommended"))))
     reply = str(data.get("reply", "")).strip()
-    if not actions or not reply:
-        raise ValueError("LLM не повернув валідних дій/відповіді")
+    # порожні actions — валідна відповідь (уточнююче питання), а от без reply агенту нічого показати
+    if not reply:
+        raise ValueError("LLM не повернув відповіді")
+    reasoning = data.get("reasoning") or []
+    if isinstance(reasoning, str):
+        reasoning = [reasoning]
 
     sig = detect_signals(message)
     churn = compute_churn_risk(intent, ctx, sig, goal)
     return {
         "intent": intent, "true_goal": goal, "sentiment": sentiment, "churn_risk": churn,
         "priority": compute_priority(intent, sentiment, churn, ctx),
-        "reasoning": [str(x) for x in data.get("reasoning", [])][:5],
+        "reasoning": [str(x) for x in reasoning][:5],
         "suggested_reply": reply, "actions": actions, "context": ctx, "source": "llm",
     }
 
 
 def analyze(s: dict, message: str, history: list | None = None) -> dict:
     """Головна точка входу: LLM, якщо доступний, інакше (або при збої) — правила."""
-    if os.getenv("ANTHROPIC_API_KEY"):
+    if os.getenv("GEMINI_API_KEY"):
         try:
             return llm_analyze(s, message, history)
         except Exception as e:  # будь-який збій LLM не має ламати підтримку

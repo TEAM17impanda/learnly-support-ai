@@ -17,8 +17,8 @@ tests/         pytest (agent, tools, api, quality)
 `data → context → tools → agent → main`; `store` використовують `agent` (id дій) і `main`.
 
 ## Конфігурація (`.env`)
-- `ANTHROPIC_API_KEY` — вмикає LLM-шлях; без нього лише правила
-- `LLM_MODEL` — за замовчуванням `claude-sonnet-5-5`
+- `GEMINI_API_KEY` — вмикає LLM-шлях; без нього лише правила
+- `LLM_MODEL` — за замовчуванням `gemini-2.5-flash`
 - `AUTONOMY` — `copilot` | `auto_low_risk`
 
 ## Запуск
