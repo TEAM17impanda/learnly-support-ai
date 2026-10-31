@@ -1,0 +1,96 @@
+def _role_scenario_reply(role: str, scenario: str, msg: str, conv: dict) -> dict:
+    if role == "teacher":
+        STATE.log("teacher_role_chat", scenario=scenario)
+        return {"role": role, **teacher_agent.analyze_teacher_message(msg, STATE.calendar)}
+
+    elif role == "student":
+        if scenario == "auth":
+            STATE.log("student_auth_check", student="Денис Коваль")
+            return {
+                "role": role,
+                "intent": "auth_issue",
+                "intent_title": "Проблема з авторизацією / кодом",
+                "verified_context": {
+                    "account_status": "Активний",
+                    "auth_method": "SMS verification (+380501234567)",
+                    "gateway_status": "Затримка доставки SMS оператора (код 429)",
+                },
+                "checked_by_ai": "Логи шлюзу авторизації, блокування IP, статус облікового запису",
+                "decision_type": "resolved_by_ai",
+                "proposed_action": {
+                    "title": "Надіслати резервний магічний лінк",
+                    "description": "Одноразовий токен входу відправлено на підтверджений email",
+                },
+                "ai_reply": "Бачу, що ваш акаунт активний, але SMS-шлюз мобільного оператора тимчасово затримує доставку кодів. "
+                            "Щоб ви не чекали, я надіслала одноразове безпечне посилання для миттєвого входу на ваш email (d****@example.com). "
+                            "Перевірте пошту — лінк дійсний 15 хвилин!",
+            }
+        else:
+            STATE.log("homework_check", student="Денис Коваль")
+            return {
+                "role": role,
+                "intent": "homework_sync_issue",
+                "intent_title": "Домашнє завдання не відображається",
+                "verified_context": {
+                    "attempt_time": "Вчора, 21:14",
+                    "file_size": "2.4 MB (PDF)",
+                    "upload_status": "Тимчасова помилка хмарного сховища (S3 timeout)",
+                },
+                "checked_by_ai": "Журнал спроб завантаження файлів, кеш чернетки у браузері",
+                "decision_type": "resolved_by_ai",
+                "proposed_action": {
+                    "title": "Відновлення з чернетки",
+                    "description": "Робота знайдена в локальному кеші платформи та автоматично надіслана викладачу",
+                },
+                "ai_reply": "Перевірила логи: вчора о 21:14 ви дійсно завантажували файл із ДЗ (2.4 MB), але сталася затримка синхронізації з хмарою. "
+                            "Ваша чернетка збереглася! Я успішно синхронізувала файл із кабінетом викладача Олени Іванівни. Тепер статус: «Здано на перевірку».",
+            }
+
+    else:  # parent
+        if scenario == "payment":
+            return _payment_start(msg, conv)
+        else:
+            new_esc = _create_escalation(
+                source_role="parent", user_name="Оксана Шевченко", category="Сімейний акаунт",
+                team="admin", original_message=msg,
+                problem="Не вдається додати профіль другої дитини (Марія, 6 років)",
+                verified_context="Основний акаунт активний. Спроба створити сімейний профіль.",
+                checked_by_ai="Наявність дублікатів у базі, сімейний тариф",
+                escalation_reason="Потрібна ручна валідація сімейного зв'язку в CRM адміністратором",
+                priority="P2",
+            )
+            esc_id = new_esc["id"]
+            return {
+                "role": role,
+                "intent": "sibling_profile_issue",
+                "intent_title": "Додавання другої дитини до акаунта",
+                "verified_context": {
+                    "parent_account": "Оксана Шевченко (перевірено)",
+                    "target_child": "Марія Шевченко (6 років)",
+                },
+                "checked_by_ai": "Наявність дублікатів у базі, сімейний тариф",
+                "decision_type": "escalated_to_admin",
+                "escalated_ticket": new_esc,
+                "ai_reply": "Перевірила дані: для активації сімейного профілю для другої дитини (Марії) потрібна підтверджуюча прив'язка в базі школи. "
+                            f"Я передала запит адміністратору (Тікет №{esc_id}), профіль буде підключено протягом кількох хвилин!",
+            }
+
+
+@app.post("/api/role-chat/resolve-booking")
+def resolve_booking(body: ResolveBooking):
+    return teacher_resolve_booking(body)
+
+
+# ---------------- адмінка: черга ескалацій ----------------
+ROLE_LABELS = {"student": "Учень", "teacher": "Викладач", "parent": "Батьки"}
+ESC_STATUSES = ("pending", "in_progress", "resolved")
+DEFAULT_RESOLUTIONS = {
+    "finance": "Транзакцію підтверджено, заняття зараховано на баланс.",
+    "tech": "Технічну проблему усунено, доступ перевірено.",
+    "admin": "Запит опрацьовано вручну адміністратором.",
+    "teacher": "Навчальний відділ погодив звільнення слота. Слот Вівторок 16:00 звільнено.",
+}
+
+
+class TakeEscalation(BaseModel):
+    admin_na

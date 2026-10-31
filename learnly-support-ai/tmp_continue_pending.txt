@@ -1,0 +1,38 @@
+def _continue_pending(role: str, conv: dict, msg: str) -> dict:
+    if conv["pending"]["scenario"] == "payment":
+        return _payment_continue(msg, conv)
+    conv["pending"] = None
+    reply, source = agent.role_reply(role, msg, conv["history"][-6:])
+    return {"role": role, "intent": "unclear", "intent_title": "Уточнення запиту",
+            "decision_type": "needs_clarification", "source": source, "ai_reply": reply}
+
+
+def _role_scenario_reply(role: str, scenario: str, msg: str, conv: dict) -> dict:
+    if role == "teacher":
+        STATE.log("teacher_role_chat", scenario=scenario)
+        return {"role": role, **teacher_agent.analyze_teacher_message(msg, STATE.calendar)}
+
+    elif role == "student":
+        if scenario == "auth":
+            STATE.log("student_auth_check", student="Денис Коваль")
+            return {
+                "role": role,
+                "intent": "auth_issue",
+                "intent_title": "Проблема з авторизацією / кодом",
+                "verified_context": {
+                    "account_status": "Активний",
+                    "auth_method": "SMS verification (+380501234567)",
+                    "gateway_status": "Затримка доставки SMS оператора (код 429)",
+                },
+                "checked_by_ai": "Логи шлюзу авторизації, блокування IP, статус облікового запису",
+                "decision_type": "resolved_by_ai",
+                "proposed_action": {
+                    "title": "Надіслати резервний магічний лінк",
+                    "description": "Одноразовий токен входу відправлено на підтверджений email",
+                },
+                "ai_reply": "Бачу, що ваш акаунт активний, але SMS-шлюз мобільного оператора тимчасово затримує доставку кодів. "
+                            "Щоб ви не чекали, я надіслала одноразове безпечне посилання для миттєвого входу на ваш email (d****@example.com). "
+                            "Перевірте пошту — лінк дійсний 15 хвилин!",
+            }
+        else:
+            STATE.log

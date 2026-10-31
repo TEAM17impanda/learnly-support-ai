@@ -1,0 +1,101 @@
+return scenario
+    return None
+
+
+@app.post("/api/role-chat")
+def role_chat(body: RoleChatMessage):
+    msg = body.message.strip()
+    tone = agent.detect_tone(msg)
+    scenario = _detect_role_scenario(body.role, msg.lower())
+    conv = STATE.conversations.setdefault(body.role, {"history": [], "pending": None})
+    history = conv["history"][-6:]
+    conv["history"].append({"from": "user", "text": msg})
+
+    pending = conv["pending"]
+    if pending and scenario in (None, pending["scenario"]):
+        # відповідь на наше уточнювальне питання — продовжуємо той самий сценарій, а не починаємо новий
+        res = _continue_pending(body.role, conv, msg)
+    elif scenario is None:
+        reply, source = agent.role_reply(body.role, msg, history)
+        STATE.log("role_chat_clarify", role=body.role, source=source, tone=tone)
+        res = {
+            "role": body.role,
+            "intent": "greeting" if agent.is_greeting(msg) else tone or "unclear",
+            "intent_title": "Уточнення запиту",
+            "decision_type": "needs_clarification",
+            "source": source,
+            "ai_reply": reply,
+        }
+    else:
+        conv["pending"] = None  # нова проблема скасовує незавершене уточнення
+        res = _role_scenario_reply(body.role, scenario, msg, conv)
+
+    res["tone"] = tone
+    if tone == "sarcasm":  # іронію не сприймаємо буквально — спершу визнаємо незручність
+        res["ai_reply"] = "Розумію, що ситуація неприємна, — перепрошую за незручності. " + res["ai_reply"]
+    conv["history"].append({"from": "agent", "text": res["ai_reply"]})
+    conv["history"] = conv["history"][-20:]
+    return res
+
+
+@app.post("/api/role-chat/reset")
+def role_chat_reset(role: str | None = None):
+    """Нова сесія чату: забуваємо історію та незавершені уточнення (усіх ролей або однієї)."""
+    for r in ([role] if role else list(STATE.conversations)):
+        STATE.conversations.pop(r, None)
+    return {"ok": True}
+
+
+# ---------- сценарій батьків: оплата пройшла на пошту з одруківкою ----------
+EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+CARD_RE = re.compile(r"(?:карт\w*|цифр\w*)\D{0,25}(\d{4})\b|^\s*\*?(\d{4})\s*$")  # «2400 грн» — не картка
+
+
+def _checks_view(checks: list) -> list:
+    return [{"tool": c["tool"], "args": c["args"], "ok": c["ok"], "summary": c["summary"]} for c in checks]
+
+
+def _payment_start(msg: str, conv: dict) -> dict:
+    acc_id = ROLE_ACCOUNTS["parent"]
+    ref = "chat:parent"
+    checks = [mcp.call("get_account", "agent", ref, account_id=acc_id)]
+    acc = checks[0]["result"]
+    checks.append(mcp.call("find_payments", "agent", ref, email=acc["email"]))
+    new_on_account = [x for x in checks[-1]["result"] if not x["linked_account"]]
+    conv["pending"] = {"scenario": "payment", "account_id": acc_id, "checks": checks,
+                       "original": msg, "attempts": 0}
+    if EMAIL_RE.search(msg) or CARD_RE.search(msg.lower()):  # пошту/картку вказали одразу — уточнювати нічого
+        return _payment_continue(msg, conv)
+    if new_on_account:  # оплата на правильну пошту, але не прив'язана — одразу до адміна
+        return _payment_continue(acc["email"], conv)
+    linked = [x for x in checks[-1]["result"] if x["linked_account"]]
+    seen = (f"бачу лише оплату від {linked[0]['paid_at']} — її вже зараховано" if linked
+            else "оплат не знайшла")
+    return {
+        "role": "parent", "intent": "payment_missing", "intent_title": "Оплата пройшла, заняття не з'явилися",
+        "decision_type": "needs_clarification", "checks": _checks_view(checks),
+        "ai_reply": (f"Перевірила ваш акаунт ({acc['email']}): баланс {acc['lessons_balance']} занять, а за цією поштою "
+                     f"{seen}. Найчастіше так буває, коли під час оплати вказали іншу пошту. "
+                     "Підкажіть, будь ласка, яку пошту ви вводили при оплаті — або останні 4 цифри картки?"),
+    }
+
+
+def _payment_continue(msg: str, conv: dict) -> dict:
+    p = conv["pending"]
+    ref = "chat:parent"
+    email = EMAIL_RE.search(msg)
+    card = CARD_RE.search(msg.lower())
+    if not email and not card:
+        p["attempts"] += 1
+        if p["attempts"] < 2:
+            return {"role": "parent", "intent": "payment_missing", "intent_title": "Уточнення даних оплати",
+                    "decision_type": "needs_clarification", "checks": _checks_view(p["checks"]),
+                    "ai_reply": "Щоб знайти оплату, мені потрібна пошта, яку ви вводили при оплаті "
+                                "(наприклад, name@gmail.com), або останні 4 цифри картки."}
+        return _payment_escalate(conv, None, "Користувач не надав даних для пошуку оплати")
+
+    args = {"email": email.group(0)} if email else {"card_last4": card.group(1) or card.group(2)}
+    p["checks"].append(mcp.call("find_payments", "agent", ref, **args))
+    candidates = [x for x in p["checks"][-1]["result"] or [] if not x["linked_account"]]
+    if not candidates:
+        return _payment_escalate(conv, None, "Неприв'язаних оплат за наданими да
