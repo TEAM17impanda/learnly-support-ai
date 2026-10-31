@@ -565,6 +565,43 @@ EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 CARD_RE = re.compile(r"(?:карт\w*|цифр\w*)\D{0,25}(\d{4})\b|^\s*\*?(\d{4})\s*$")  # «2400 грн» — не картка
 
 
+AMOUNT_RE = re.compile(r"(\d{1,3}(?:[ , ]\d{3})+|\d{3,6})\s*(?:грн|₴|uah)", re.I)
+DIGITS4_RE = re.compile(r"(?<!\d)(\d{4})(?!\d)")
+
+
+def _amount(msg: str) -> int | None:
+    m = AMOUNT_RE.search(msg)
+    return int(re.sub(r"\D", "", m.group(1))) if m else None
+
+
+def _mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:3]}***@{domain}"
+
+
+def _payment_confirm_owner(msg: str, conv: dict) -> dict:
+    """Знайдений агентом платіж віддаємо на зарахування лише після перевірки останніх 4 цифр картки."""
+    p = conv["pending"]
+    pay = p["candidate"]
+    digits = [d for d in DIGITS4_RE.findall(msg) if d != str(pay["amount"])]
+    if not digits:
+        p["attempts"] += 1
+        if p["attempts"] < 2:
+            return {"role": "parent", "intent": "payment_missing", "intent_title": "Підтвердження власника оплати",
+                    "decision_type": "needs_clarification", "checks": _checks_view(p["checks"]),
+                    "ai_reply": "Мені потрібні лише останні 4 цифри картки, з якої ви платили "
+                                "(наприклад, 1234) — так я переконаюсь, що це саме ваша оплата."}
+        return _payment_escalate(conv, None, "Власник оплати не підтвердив картку")
+    p["checks"].append(mcp.call("find_payments", "agent", "chat:parent",
+                                card_last4=digits[0], amount=pay["amount"]))
+    if not any(x["id"] == pay["id"] for x in p["checks"][-1]["result"]):
+        return _payment_escalate(conv, None, "Цифри картки не збіглися зі знайденою оплатою — потрібна ручна перевірка")
+    # агент пробує виправити сам — шлюз не дає: фінансовий запис дозволено лише адміністратору
+    p["checks"].append(mcp.call("link_payment", "agent", "chat:parent",
+                                payment_id=pay["id"], account_id=p["account_id"]))
+    return _payment_escalate(conv, pay, None)
+
+
 def _checks_view(checks: list) -> list:
     return [{"tool": c["tool"], "args": c["args"], "ok": c["ok"], "summary": c["summary"]} for c in checks]
 
@@ -582,6 +619,25 @@ def _payment_start(msg: str, conv: dict) -> dict:
         return _payment_continue(msg, conv)
     if new_on_account:  # оплата на правильну пошту, але не прив'язана — одразу до адміна
         return _payment_continue(acc["email"], conv)
+    amount = _amount(msg)
+    if amount:
+        # людина не знає, що помилилась у пошті, — тож шукаємо самі: неприв'язані оплати на цю суму,
+        # де пошта платника майже збігається з поштою акаунта
+        checks.append(mcp.call("find_payments", "agent", ref, amount=amount))
+        similar = [x for x in checks[-1]["result"] if not x["linked_account"]
+                   and difflib.SequenceMatcher(None, x["payer_email"], acc["email"]).ratio() > 0.85]
+        if similar:
+            pay = similar[0]
+            conv["pending"]["candidate"] = pay  # останні 4 цифри картки лишаються на сервері — це перевірка власника
+            return {
+                "role": "parent", "intent": "payment_missing", "intent_title": "Підтвердження власника оплати",
+                "decision_type": "needs_clarification", "checks": _checks_view(checks),
+                "ai_reply": (f"Перевірила ваш акаунт ({acc['email']}): баланс {acc['lessons_balance']} занять. "
+                             f"Але я знайшла неприв'язану оплату {pay['amount']} грн ({pay['paid_at']}) на пошту "
+                             f"{_mask_email(pay['payer_email'])} — схоже, під час оплати в адресі була одруківка. "
+                             "Щоб я могла передати її на зарахування, підтвердіть, будь ласка, "
+                             "останні 4 цифри картки, з якої платили."),
+            }
     linked = [x for x in checks[-1]["result"] if x["linked_account"]]
     seen = (f"бачу лише оплату від {linked[0]['paid_at']} — її вже зараховано" if linked
             else "оплат не знайшла")
@@ -597,6 +653,8 @@ def _payment_start(msg: str, conv: dict) -> dict:
 def _payment_continue(msg: str, conv: dict) -> dict:
     p = conv["pending"]
     ref = "chat:parent"
+    if p.get("candidate"):
+        return _payment_confirm_owner(msg, conv)
     email = EMAIL_RE.search(msg)
     card = CARD_RE.search(msg.lower())
     if not email and not card:
@@ -641,7 +699,7 @@ def _payment_escalate(conv: dict, pay: dict | None, not_found_reason: str | None
             proposed_fix={"tool": "link_payment", "args": {"payment_id": pay["id"], "account_id": acc["id"]},
                           "title": f"Прив'язати {pay['id']} до акаунта {acc['email']} і зарахувати {pay['package']}"},
         )
-        reply = (f"Знайшла! Оплата {pay['amount']} грн ({pay['package']}, {pay['paid_at']}) пройшла {why}, "
+        reply = (f"Дякую! Оплата {pay['amount']} грн ({pay['package']}, {pay['paid_at']}) пройшла {why}, "
                  "тому вона не прив'язалася до вашого акаунта. Фінансові зміни я не можу робити самостійно, "
                  f"тож передала адміністратору терміновий тікет №{esc['id']} з готовим рішенням — прив'язати оплату "
                  "до вашого акаунта. Щойно він підтвердить, заняття з'являться на балансі, і я вам напишу.")

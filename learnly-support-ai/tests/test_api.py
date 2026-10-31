@@ -291,18 +291,20 @@ def test_mcp_gateway_enforces_access_rules():
 
 
 def test_payment_wrong_email_flow_with_clarification_memory_and_admin_fix():
-    """Ментор: ~40% звернень — оплата на неправильну пошту. Агент уточнює, пам'ятає контекст,
+    """Ментор: ~40% звернень — оплата на неправильну пошту. Людина не знає про одруківку, тож агент
+    сам знаходить платіж за сумою й схожою поштою, перевіряє власника (4 цифри картки), пам'ятає контекст,
     сам фінанси не чіпає, адміністратор виконує готове рішення одним кліком."""
     first = client.post("/api/role-chat", json={"role": "parent",
                         "message": "Сплатила 2400 грн за 8 уроків, а баланс 0 занять!"}).json()
     assert first["decision_type"] == "needs_clarification" and "escalated_ticket" not in first
-    assert [c["tool"] for c in first["checks"]] == ["get_account", "find_payments"]
+    assert [c["tool"] for c in first["checks"]] == ["get_account", "find_payments", "find_payments"]
+    assert "oks***@gmial.com" in first["ai_reply"] and "4417" not in first["ai_reply"]  # не розкриває картку
     assert len(client.get("/api/admin/escalations").json()) == 2                       # тікет ще не створено
 
     vague = client.post("/api/role-chat", json={"role": "parent", "message": "не пам'ятаю точно"}).json()
-    assert vague["decision_type"] == "needs_clarification"                             # пам'ятає, що чекає пошту
+    assert vague["decision_type"] == "needs_clarification"                             # пам'ятає, що чекає картку
 
-    r = client.post("/api/role-chat", json={"role": "parent", "message": "oksana.shevchenko@gmial.com"}).json()
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "4417"}).json()
     esc = r["escalated_ticket"]
     assert r["decision_type"] == "escalated_to_admin" and "одруківк" in r["ai_reply"]
     assert esc["priority"] == "P1" and esc["proposed_fix"]["args"]["payment_id"] == "TX-9842"
@@ -324,3 +326,12 @@ def test_payment_card_digits_and_new_problem_resets_pending():
     client.post("/api/role-chat", json={"role": "parent", "message": "Гроші списали, а занять немає"})
     other = client.post("/api/role-chat", json={"role": "parent", "message": "Хочу додати профіль доньки"}).json()
     assert other["intent"] == "sibling_profile_issue"                                  # нова тема скасувала уточнення
+
+
+def test_payment_found_by_agent_but_card_mismatch_goes_to_manual_check():
+    client.post("/api/role-chat", json={"role": "parent", "message": "Оплатила 2 400 грн, а занять 0"})
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "1111"}).json()
+    esc = r["escalated_ticket"]
+    assert esc["proposed_fix"] is None                                                 # без підтвердження — ніяких фіксів
+    assert "не збіглися" in esc["verified_context"]
+    assert "link_payment" not in [c["tool"] for c in esc["agent_checks"]]
