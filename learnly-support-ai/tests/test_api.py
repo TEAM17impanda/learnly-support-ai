@@ -173,7 +173,8 @@ def test_escalation_resolution_note_matches_problem():
 
 def test_admin_ticket_lifecycle_and_result_returns_to_user_chat():
     """Концепція, розд. 3: тікет → взяти в роботу → рішення → результат в історії користувача."""
-    r = client.post("/api/role-chat", json={"role": "parent", "message": "Оплата пройшла, а баланс 0"}).json()
+    client.post("/api/role-chat", json={"role": "parent", "message": "Оплата пройшла, а баланс 0"})
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "oksana.shevchenko@gmial.com"}).json()
     esc_id = r["escalated_ticket"]["id"]
     esc = client.get(f"/api/admin/escalations/{esc_id}").json()
     for field in ("user_name", "user_role", "original_message", "problem", "verified_context",
@@ -188,7 +189,7 @@ def test_admin_ticket_lifecycle_and_result_returns_to_user_chat():
     done = client.post(f"/api/admin/escalations/{esc_id}/resolve",
                        json={"resolution": "Зараховано 8 занять"}).json()
     assert done["status"] == "resolved" and done["resolution"] == "Зараховано 8 занять"
-    assert [h["event"] for h in done["history"]] == ["created", "taken", "resolved"]
+    assert [h["event"] for h in done["history"]] == ["created", "taken", "fix_executed", "resolved"]
     assert client.post(f"/api/admin/escalations/{esc_id}/resolve").status_code == 409
 
     updates = client.post("/api/role-chat/updates?role=parent").json()
@@ -270,3 +271,56 @@ def test_role_chat_handles_joke_and_sarcasm():
         "role": "student", "message": "Супер платформа, знову не приходить код SMS"}).json()
     assert sarcasm["intent"] == "auth_issue" and sarcasm["tone"] == "sarcasm"   # суть розпізнана
     assert sarcasm["ai_reply"].startswith("Розумію, що ситуація неприємна")
+
+
+
+# ---------- MCP-шлюз і сценарій «оплата на пошту з одруківкою» ----------
+def test_mcp_gateway_enforces_access_rules():
+    from app import mcp
+    acc = mcp.call("get_account", "agent", account_id="acc-oksana")
+    assert acc["ok"] and "password_hash" not in acc["result"] and "phone" not in acc["result"]
+    pays = mcp.call("find_payments", "agent", card_last4="4417")
+    assert pays["ok"] and all("card_number" not in x for x in pays["result"])
+    assert not mcp.call("find_payments", "agent")["ok"]                                   # без фільтра — заборонено
+    assert not mcp.call("drop_table", "agent")["ok"]                                       # поза білим списком
+    denied = mcp.call("link_payment", "agent", payment_id="TX-9842", account_id="acc-oksana")
+    assert not denied["ok"] and "agent" in denied["summary"]                               # запис — лише admin
+    assert not mcp.call("get_account", "agent", account_id="acc-oksana", password_hash="x")["ok"]
+    events = [a for a in client.get("/api/audit").json() if a["event"] == "mcp_call"]
+    assert len(events) >= 5                                                                # кожен виклик в аудиті
+
+
+def test_payment_wrong_email_flow_with_clarification_memory_and_admin_fix():
+    """Ментор: ~40% звернень — оплата на неправильну пошту. Агент уточнює, пам'ятає контекст,
+    сам фінанси не чіпає, адміністратор виконує готове рішення одним кліком."""
+    first = client.post("/api/role-chat", json={"role": "parent",
+                        "message": "Сплатила 2400 грн за 8 уроків, а баланс 0 занять!"}).json()
+    assert first["decision_type"] == "needs_clarification" and "escalated_ticket" not in first
+    assert [c["tool"] for c in first["checks"]] == ["get_account", "find_payments"]
+    assert len(client.get("/api/admin/escalations").json()) == 2                       # тікет ще не створено
+
+    vague = client.post("/api/role-chat", json={"role": "parent", "message": "не пам'ятаю точно"}).json()
+    assert vague["decision_type"] == "needs_clarification"                             # пам'ятає, що чекає пошту
+
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "oksana.shevchenko@gmial.com"}).json()
+    esc = r["escalated_ticket"]
+    assert r["decision_type"] == "escalated_to_admin" and "одруківк" in r["ai_reply"]
+    assert esc["priority"] == "P1" and esc["proposed_fix"]["args"]["payment_id"] == "TX-9842"
+    assert [c["tool"] for c in esc["agent_checks"]][-1] == "link_payment"
+    assert esc["agent_checks"][-1]["ok"] is False                                       # агенту шлюз не дав
+
+    done = client.post(f"/api/admin/escalations/{esc['id']}/resolve").json()
+    assert "+8 занять" in done["resolution"]
+    from app import mcp
+    assert mcp.call("get_account", "admin", account_id="acc-oksana")["result"]["lessons_balance"] == 8
+    updates = client.post("/api/role-chat/updates?role=parent").json()
+    assert [u["id"] for u in updates] == [esc["id"]]                                   # Оксана бачить рішення
+
+
+def test_payment_card_digits_and_new_problem_resets_pending():
+    client.post("/api/role-chat", json={"role": "parent", "message": "Гроші списали, а занять немає"})
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "картка закінчується на 4417"}).json()
+    assert r["escalated_ticket"]["proposed_fix"]["args"]["payment_id"] == "TX-9842"
+    client.post("/api/role-chat", json={"role": "parent", "message": "Гроші списали, а занять немає"})
+    other = client.post("/api/role-chat", json={"role": "parent", "message": "Хочу додати профіль доньки"}).json()
+    assert other["intent"] == "sibling_profile_issue"                                  # нова тема скасувала уточнення

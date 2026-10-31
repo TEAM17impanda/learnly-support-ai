@@ -1,6 +1,7 @@
 """REST API + роздача фронтенду."""
 import asyncio
 import copy
+import difflib
 import os
 import re
 from pathlib import Path
@@ -13,9 +14,10 @@ from pydantic import BaseModel, Field, field_validator
 
 load_dotenv()
 
-from . import agent, teacher_agent, tools  # noqa: E402
+from . import agent, mcp, teacher_agent, tools  # noqa: E402
 from .context import build_context  # noqa: E402
-from .data import COURSES, DEMO_MESSAGES, HISTORY, INITIAL_CALENDAR, TEACHER_STUDENTS  # noqa: E402
+from .data import (COURSES, DEMO_MESSAGES, HISTORY, INITIAL_CALENDAR, ROLE_ACCOUNTS,  # noqa: E402
+                   ROLE_PRESETS, TEACHER_STUDENTS)
 from .quality import score_reply  # noqa: E402
 from .store import STATE, now  # noqa: E402
 
@@ -519,27 +521,156 @@ def role_chat(body: RoleChatMessage):
     msg = body.message.strip()
     tone = agent.detect_tone(msg)
     scenario = _detect_role_scenario(body.role, msg.lower())
+    conv = STATE.conversations.setdefault(body.role, {"history": [], "pending": None})
+    history = conv["history"][-6:]
+    conv["history"].append({"from": "user", "text": msg})
 
-    if scenario is None:
-        reply, source = agent.role_reply(body.role, msg)
+    pending = conv["pending"]
+    if pending and scenario in (None, pending["scenario"]):
+        # відповідь на наше уточнювальне питання — продовжуємо той самий сценарій, а не починаємо новий
+        res = _continue_pending(body.role, conv, msg)
+    elif scenario is None:
+        reply, source = agent.role_reply(body.role, msg, history)
         STATE.log("role_chat_clarify", role=body.role, source=source, tone=tone)
-        return {
+        res = {
             "role": body.role,
             "intent": "greeting" if agent.is_greeting(msg) else tone or "unclear",
             "intent_title": "Уточнення запиту",
             "decision_type": "needs_clarification",
-            "source": source, "tone": tone,
+            "source": source,
             "ai_reply": reply,
         }
+    else:
+        conv["pending"] = None  # нова проблема скасовує незавершене уточнення
+        res = _role_scenario_reply(body.role, scenario, msg, conv)
 
-    res = _role_scenario_reply(body.role, scenario, msg)
     res["tone"] = tone
     if tone == "sarcasm":  # іронію не сприймаємо буквально — спершу визнаємо незручність
         res["ai_reply"] = "Розумію, що ситуація неприємна, — перепрошую за незручності. " + res["ai_reply"]
+    conv["history"].append({"from": "agent", "text": res["ai_reply"]})
+    conv["history"] = conv["history"][-20:]
     return res
 
 
-def _role_scenario_reply(role: str, scenario: str, msg: str) -> dict:
+@app.post("/api/role-chat/reset")
+def role_chat_reset(role: str | None = None):
+    """Нова сесія чату: забуваємо історію та незавершені уточнення (усіх ролей або однієї)."""
+    for r in ([role] if role else list(STATE.conversations)):
+        STATE.conversations.pop(r, None)
+    return {"ok": True}
+
+
+# ---------- сценарій батьків: оплата пройшла на пошту з одруківкою ----------
+EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+CARD_RE = re.compile(r"(?:карт\w*|цифр\w*)\D{0,25}(\d{4})\b|^\s*\*?(\d{4})\s*$")  # «2400 грн» — не картка
+
+
+def _checks_view(checks: list) -> list:
+    return [{"tool": c["tool"], "args": c["args"], "ok": c["ok"], "summary": c["summary"]} for c in checks]
+
+
+def _payment_start(msg: str, conv: dict) -> dict:
+    acc_id = ROLE_ACCOUNTS["parent"]
+    ref = "chat:parent"
+    checks = [mcp.call("get_account", "agent", ref, account_id=acc_id)]
+    acc = checks[0]["result"]
+    checks.append(mcp.call("find_payments", "agent", ref, email=acc["email"]))
+    new_on_account = [x for x in checks[-1]["result"] if not x["linked_account"]]
+    conv["pending"] = {"scenario": "payment", "account_id": acc_id, "checks": checks,
+                       "original": msg, "attempts": 0}
+    if EMAIL_RE.search(msg) or CARD_RE.search(msg.lower()):  # пошту/картку вказали одразу — уточнювати нічого
+        return _payment_continue(msg, conv)
+    if new_on_account:  # оплата на правильну пошту, але не прив'язана — одразу до адміна
+        return _payment_continue(acc["email"], conv)
+    linked = [x for x in checks[-1]["result"] if x["linked_account"]]
+    seen = (f"бачу лише оплату від {linked[0]['paid_at']} — її вже зараховано" if linked
+            else "оплат не знайшла")
+    return {
+        "role": "parent", "intent": "payment_missing", "intent_title": "Оплата пройшла, заняття не з'явилися",
+        "decision_type": "needs_clarification", "checks": _checks_view(checks),
+        "ai_reply": (f"Перевірила ваш акаунт ({acc['email']}): баланс {acc['lessons_balance']} занять, а за цією поштою "
+                     f"{seen}. Найчастіше так буває, коли під час оплати вказали іншу пошту. "
+                     "Підкажіть, будь ласка, яку пошту ви вводили при оплаті — або останні 4 цифри картки?"),
+    }
+
+
+def _payment_continue(msg: str, conv: dict) -> dict:
+    p = conv["pending"]
+    ref = "chat:parent"
+    email = EMAIL_RE.search(msg)
+    card = CARD_RE.search(msg.lower())
+    if not email and not card:
+        p["attempts"] += 1
+        if p["attempts"] < 2:
+            return {"role": "parent", "intent": "payment_missing", "intent_title": "Уточнення даних оплати",
+                    "decision_type": "needs_clarification", "checks": _checks_view(p["checks"]),
+                    "ai_reply": "Щоб знайти оплату, мені потрібна пошта, яку ви вводили при оплаті "
+                                "(наприклад, name@gmail.com), або останні 4 цифри картки."}
+        return _payment_escalate(conv, None, "Користувач не надав даних для пошуку оплати")
+
+    args = {"email": email.group(0)} if email else {"card_last4": card.group(1) or card.group(2)}
+    p["checks"].append(mcp.call("find_payments", "agent", ref, **args))
+    candidates = [x for x in p["checks"][-1]["result"] or [] if not x["linked_account"]]
+    if not candidates:
+        return _payment_escalate(conv, None, "Неприв'язаних оплат за наданими даними не знайдено")
+    pay = candidates[0]
+    # агент пробує виправити сам — шлюз не дає: фінансовий запис дозволено лише адміністратору
+    p["checks"].append(mcp.call("link_payment", "agent", ref, payment_id=pay["id"], account_id=p["account_id"]))
+    return _payment_escalate(conv, pay, None)
+
+
+def _payment_escalate(conv: dict, pay: dict | None, not_found_reason: str | None) -> dict:
+    p = conv["pending"]
+    acc = STATE.school["accounts"][p["account_id"]]
+    checks = p["checks"]
+    conv["pending"] = None
+    if pay:
+        similar = difflib.SequenceMatcher(None, pay["payer_email"], acc["email"]).ratio() > 0.85
+        why = (f"на пошту {pay['payer_email']} замість {acc['email']} — схоже на одруківку" if similar
+               else f"на іншу пошту ({pay['payer_email']})")
+        esc = _create_escalation(
+            source_role="parent", user_name=acc["name"], category="Оплата / прив'язка до акаунта",
+            team="finance", original_message=p["original"],
+            problem=f"Оплата {pay['amount']} грн ({pay['package']}) пройшла, але не прив'язалась до акаунта",
+            verified_context=(f"Акаунт {acc['email']}: баланс {acc['lessons_balance']} занять. Платіж {pay['id']} "
+                              f"({pay['paid_at']}, картка *{pay['card_last4']}) успішний, але оформлений {why}."),
+            checked_by_ai="; ".join(f"{c['tool']}: {c['summary']}" for c in checks),
+            escalation_reason="Фінансова операція (прив'язка платежу й нарахування занять): "
+                              "MCP-шлюз дозволяє її лише адміністратору",
+            priority="P1", agent_checks=_checks_view(checks),
+            proposed_fix={"tool": "link_payment", "args": {"payment_id": pay["id"], "account_id": acc["id"]},
+                          "title": f"Прив'язати {pay['id']} до акаунта {acc['email']} і зарахувати {pay['package']}"},
+        )
+        reply = (f"Знайшла! Оплата {pay['amount']} грн ({pay['package']}, {pay['paid_at']}) пройшла {why}, "
+                 "тому вона не прив'язалася до вашого акаунта. Фінансові зміни я не можу робити самостійно, "
+                 f"тож передала адміністратору терміновий тікет №{esc['id']} з готовим рішенням — прив'язати оплату "
+                 "до вашого акаунта. Щойно він підтвердить, заняття з'являться на балансі, і я вам напишу.")
+    else:
+        esc = _create_escalation(
+            source_role="parent", user_name=acc["name"], category="Оплата / прив'язка до акаунта",
+            team="finance", original_message=p["original"],
+            problem="Користувач повідомляє про оплату, яку не вдалося знайти",
+            verified_context=f"Акаунт {acc['email']}: баланс {acc['lessons_balance']} занять. {not_found_reason}.",
+            checked_by_ai="; ".join(f"{c['tool']}: {c['summary']}" for c in checks),
+            escalation_reason="Потрібна ручна звірка з банком", priority="P1", agent_checks=_checks_view(checks),
+        )
+        reply = (f"За цими даними неприв'язаної оплати я не знайшла. Передала запит фінансовому відділу "
+                 f"(тікет №{esc['id']}) — вони звірять платіж із банком. Якщо є квитанція, надішліть її, будь ласка.")
+    return {"role": "parent", "intent": "payment_missing", "intent_title": "Оплата пройшла, заняття не з'явилися",
+            "decision_type": "escalated_to_admin", "escalated_ticket": esc,
+            "checks": _checks_view(checks), "ai_reply": reply}
+
+
+def _continue_pending(role: str, conv: dict, msg: str) -> dict:
+    if conv["pending"]["scenario"] == "payment":
+        return _payment_continue(msg, conv)
+    conv["pending"] = None
+    reply, source = agent.role_reply(role, msg, conv["history"][-6:])
+    return {"role": role, "intent": "unclear", "intent_title": "Уточнення запиту",
+            "decision_type": "needs_clarification", "source": source, "ai_reply": reply}
+
+
+def _role_scenario_reply(role: str, scenario: str, msg: str, conv: dict) -> dict:
     if role == "teacher":
         STATE.log("teacher_role_chat", scenario=scenario)
         return {"role": role, **teacher_agent.analyze_teacher_message(msg, STATE.calendar)}
@@ -589,32 +720,7 @@ def _role_scenario_reply(role: str, scenario: str, msg: str) -> dict:
 
     else:  # parent
         if scenario == "payment":
-            new_esc = _create_escalation(
-                source_role="parent", user_name="Оксана Шевченко", category="Оплата / нарахування занять",
-                team="finance", original_message=msg,
-                problem="Оплата 2,400 грн списана з картки, баланс уроків не поповнився",
-                verified_context="Monobank транзакція TX-9842 успішна. Вебхук білінгу отримано, але статус обробки застряг.",
-                checked_by_ai="Банківський шлюз (успішно), лог білінгу, баланс сім'ї (0 занять)",
-                escalation_reason="Політика безпеки: фінансові нарахування потребують авторизації адміністратора",
-                priority="P1",
-            )
-            esc_id = new_esc["id"]
-            return {
-                "role": role,
-                "intent": "payment_missing",
-                "intent_title": "Оплата успішна, заняття не з'явилися",
-                "verified_context": {
-                    "transaction": "TX-9842 (2,400 грн, Monobank)",
-                    "bank_status": "Успішно списано",
-                    "crm_balance": "0 занять (вебхук очікує підтвердження)",
-                },
-                "checked_by_ai": "Банківський шлюз, статус транзакції, чергу синхронізації оплат",
-                "decision_type": "escalated_to_admin",
-                "escalated_ticket": new_esc,
-                "ai_reply": "Я перевірила банківський шлюз: оплата 2,400 грн пройшла успішно, але через затримку платіжного шлюзу заняття ще не відобразилися в кабінеті. "
-                            f"Згідно з правилами фінансової безпеки школи, я не можу змінити баланс самостійно, тому я сформувала терміновий тікет P1 (№{esc_id}) для адміністратора. "
-                            "Він уже взятий у чергу з найвищим пріоритетом!",
-            }
+            return _payment_start(msg, conv)
         else:
             new_esc = _create_escalation(
                 source_role="parent", user_name="Оксана Шевченко", category="Сімейний акаунт",
@@ -669,7 +775,8 @@ class ResolveEscalation(BaseModel):
 
 def _create_escalation(*, source_role: str, user_name: str, category: str, team: str,
                        original_message: str, problem: str, verified_context: str,
-                       checked_by_ai: str, escalation_reason: str, priority: str) -> dict:
+                       checked_by_ai: str, escalation_reason: str, priority: str,
+                       agent_checks: list | None = None, proposed_fix: dict | None = None) -> dict:
     """Структурований тікет для адміністратора (поля — за концепцією, розділ 3)."""
     ts = now()
     esc = {
@@ -680,6 +787,7 @@ def _create_escalation(*, source_role: str, user_name: str, category: str, team:
         "escalation_reason": escalation_reason, "priority": priority,
         "status": "pending", "created_at": ts, "updated_at": ts,
         "assignee": None, "resolution": None, "delivered": False,
+        "agent_checks": agent_checks or [], "proposed_fix": proposed_fix,
         "history": [{"ts": ts, "event": "created", "by": "AI Support Agent",
                      "note": "Тікет створено AI-агентом"}],
     }
@@ -718,6 +826,12 @@ def admin_escalations(status: str | None = None, priority: str | None = None,
              and (not priority or e["priority"] == priority)
              and (not role or e["source_role"] == role)]
     return sorted(items, key=_esc_sort_key)
+
+
+@app.get("/api/mcp/tools")
+def mcp_tools():
+    """Що агенту дозволено: інструменти, доступ, поля; які поля приховані."""
+    return mcp.catalog()
 
 
 @app.get("/api/admin/stats")
@@ -759,9 +873,19 @@ def resolve_escalation(esc_id: str, body: ResolveEscalation | None = None):
     if esc["status"] == "resolved":
         raise HTTPException(409, "Тікет уже вирішено")
     admin = body.admin_name.strip()
+    fix_note = None
+    if esc.get("proposed_fix"):
+        fix = esc["proposed_fix"]
+        run = mcp.call(fix["tool"], "admin", ref=esc_id, **fix["args"])
+        if not run["ok"]:
+            raise HTTPException(409, f"Рішення не виконано: {run['summary']}")
+        r = run["result"]
+        fix_note = (f"Оплату {r['payment_id']} прив'язано до акаунта, зараховано +{r['lessons_added']} занять "
+                    f"(баланс: {r['lessons_balance']}).")
+        _esc_event(esc, "fix_executed", admin, f"MCP {fix['tool']}: {run['summary']}")
     default = DEFAULT_RESOLUTIONS["teacher"] if esc["source_role"] == "teacher" else \
         DEFAULT_RESOLUTIONS.get(esc["team"], DEFAULT_RESOLUTIONS["admin"])
-    resolution = (body.resolution or "").strip() or default
+    resolution = (body.resolution or "").strip() or fix_note or default
     esc["status"], esc["resolution"] = "resolved", resolution
     esc["assignee"] = esc["assignee"] or admin
     esc["resolution_note"] = f"Вирішено адміністратором: {resolution}"
@@ -776,8 +900,10 @@ def resolve_escalation(esc_id: str, body: ResolveEscalation | None = None):
 @app.post("/api/role-chat/updates")
 def role_chat_updates(role: str):
     """Рішення адміністратора повертаються в історію чату користувача (один раз)."""
+    user = ROLE_PRESETS.get(role, {}).get("user_name")
     fresh = [e for e in STATE.escalations
-             if e["source_role"] == role and e["status"] == "resolved" and not e["delivered"]]
+             if e["source_role"] == role and e["user_name"] == user
+             and e["status"] == "resolved" and not e["delivered"]]
     for e in fresh:
         e["delivered"] = True
         _esc_event(e, "delivered", "AI Support Agent", "Результат повідомлено користувачу")

@@ -472,12 +472,16 @@ def fallback_role_reply(role: str, message: str) -> str:
             f"Якщо у вас питання про це — опишіть, будь ласка, що сталося.")
 
 
-def role_reply(role: str, message: str) -> tuple[str, str]:
-    """Відповідь на повідомлення поза сценаріями: (текст, джерело). Без дій і без змін стану."""
+def role_reply(role: str, message: str, history: list | None = None) -> tuple[str, str]:
+    """Відповідь на повідомлення поза сценаріями: (текст, джерело). Без дій і без змін стану.
+    history — попередні репліки чату, щоб LLM пам'ятав контекст розмови."""
     if os.getenv("GEMINI_API_KEY"):
         try:
             who, scope = ROLE_SCOPE[role]
-            text = _gemini(ROLE_CHAT_PROMPT.format(who=who, scope=scope), message,
+            past = "\n".join(f"{'Користувач' if h['from'] == 'user' else 'Агент'}: {h['text']}"
+                             for h in (history or []))
+            content = f"Попередні повідомлення:\n{past}\n\nНове повідомлення: {message}" if past else message
+            text = _gemini(ROLE_CHAT_PROMPT.format(who=who, scope=scope), content,
                            json_mode=False, max_tokens=300).strip()
             if text:
                 return text, "llm"

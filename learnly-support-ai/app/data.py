@@ -230,13 +230,13 @@ INITIAL_ESCALATIONS = [
     {
         "id": "ESC-101",
         "source_role": "parent",
-        "user_name": "Оксана Шевченко",
+        "user_name": "Віктор Гнатюк",
         "user_role": "Батьки",
         "category": "Оплата / нарахування занять",
         "team": "finance",
-        "original_message": "Сплатила пакет на 8 уроків (2,400 грн), гроші списано, а баланс досі 0 занять.",
-        "problem": "Оплата 2,400 грн пройшла, але заняття не з'явилися на балансі",
-        "verified_context": "Транзакція TX-9842 (2,400 грн) успішна в банку. Внутрішній баланс: 0 занять.",
+        "original_message": "Оплатив 4 уроки (1 200 грн) годину тому, а в кабінеті занять немає.",
+        "problem": "Оплата 1 200 грн пройшла, але заняття не з'явилися на балансі",
+        "verified_context": "Транзакція TX-9850 (1 200 грн) успішна в банку. Внутрішній баланс: 0 занять.",
         "checked_by_ai": "Статус платіжного шлюзу (Paid), синхронізацію вебхука (Pending/Failed)",
         "escalation_reason": "Фінансові операції: AI не має права прямого коригування балансу без людини",
         "priority": "P1",
@@ -270,3 +270,43 @@ INITIAL_ESCALATIONS = [
         "history": [{"ts": "11:40", "event": "created", "by": "AI Support Agent", "note": "Тікет створено AI-агентом"}],
     },
 ]
+
+
+# ----------------- ДАНІ ШКОЛИ ЗА MCP-ШЛЮЗОМ (агент бачить їх лише через app/mcp.py) -----------------
+ROLE_ACCOUNTS = {"parent": "acc-oksana", "teacher": "acc-olena", "student": "acc-denys"}
+
+
+def fresh_school() -> dict:
+    return {
+        "accounts": {
+            "acc-oksana": {
+                "id": "acc-oksana", "name": "Оксана Шевченко", "email": "oksana.shevchenko@gmail.com",
+                "role": "parent", "lessons_balance": 0, "phone": "+380671112233",
+                "password_hash": "pbkdf2$…", "children": [
+                    {"name": "Софія Шевченко", "grade": "5 клас", "course": "Math"},
+                ],
+            },
+            "acc-olena": {
+                "id": "acc-olena", "name": "Олена Іванівна", "email": "olena.ivanivna@learnly.ua",
+                "role": "teacher", "lessons_balance": 0, "phone": "+380501234000",
+                "password_hash": "pbkdf2$…", "children": [],
+            },
+            "acc-denys": {
+                "id": "acc-denys", "name": "Денис Коваль", "email": "d.koval@example.com",
+                "role": "student", "lessons_balance": 16, "phone": "+380501234567",
+                "password_hash": "pbkdf2$…", "children": [],
+            },
+        },
+        "payments": [
+            # оплата пройшла, але на пошту з одруківкою (gmial) — тому не прив'язалась до акаунта
+            {"id": "TX-9842", "amount": 2400, "package": "8 уроків", "lessons": 8,
+             "payer_email": "oksana.shevchenko@gmial.com", "card_last4": "4417", "card_number": "5375 41** **** 4417",
+             "status": "paid", "paid_at": "сьогодні 13:42", "linked_account": None},
+            {"id": "TX-9711", "amount": 2400, "package": "8 уроків", "lessons": 8,
+             "payer_email": "oksana.shevchenko@gmail.com", "card_last4": "4417", "card_number": "5375 41** **** 4417",
+             "status": "paid", "paid_at": "1 вересня", "linked_account": "acc-oksana"},
+            {"id": "TX-9850", "amount": 1200, "package": "4 уроки", "lessons": 4,
+             "payer_email": "v.hnatiuk@example.com", "card_last4": "0921", "card_number": "4149 60** **** 0921",
+             "status": "paid", "paid_at": "сьогодні 12:05", "linked_account": None},
+        ],
+    }

@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 from .data import (DEMO_MESSAGES, HISTORY, INITIAL_CALENDAR, INITIAL_ESCALATIONS,
-                   ROLE_PRESETS, fresh_students)  # noqa: F401
+                   ROLE_PRESETS, fresh_school, fresh_students)  # noqa: F401
 from .db import Database
 
 
@@ -20,6 +20,8 @@ class State:
         self.settings = {"autonomy": os.getenv("AUTONOMY", "copilot")}
         self.escalations = copy.deepcopy(INITIAL_ESCALATIONS)
         self.calendar = copy.deepcopy(INITIAL_CALENDAR)
+        self.school = fresh_school()  # дані за MCP-шлюзом
+        self.conversations: dict[str, dict] = {}  # пам'ять чатів ролей: історія + очікувана відповідь
         self.seq = {"ticket": 1001, "action": 1, "esc": 103}
         self._audit_saved = 0
         self._wipe_audit = True  # після reset старий журнал у БД замінюється
@@ -37,12 +39,15 @@ class State:
         self.settings = d["kv"].get("settings", self.settings)
         self.calendar = d["kv"].get("calendar", self.calendar)
         self.seq = d["kv"].get("seq", self.seq)
+        self.school = d["kv"].get("school", self.school)
+        self.conversations = d["kv"].get("conversations", self.conversations)
         self._audit_saved, self._wipe_audit = len(self.audit), False
         return True
 
     def save(self):
         self.db.save(self.students, self.tickets, self.escalations, self.audit[self._audit_saved:],
-                     {"settings": self.settings, "calendar": self.calendar, "seq": self.seq},
+                     {"settings": self.settings, "calendar": self.calendar, "seq": self.seq,
+                      "school": self.school, "conversations": self.conversations},
                      wipe_audit=self._wipe_audit)
         self._audit_saved, self._wipe_audit = len(self.audit), False
 
