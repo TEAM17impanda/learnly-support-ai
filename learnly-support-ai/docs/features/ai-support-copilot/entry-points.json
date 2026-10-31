@@ -1,0 +1,30 @@
+{
+  "feature": "ai-support-copilot",
+  "api": [
+    {"method": "GET",  "path": "/api/health",  "handler": "app/main.py:health"},
+    {"method": "GET",  "path": "/api/students", "handler": "app/main.py:students"},
+    {"method": "GET",  "path": "/api/students/{sid}", "handler": "app/main.py:student"},
+    {"method": "GET",  "path": "/api/tickets", "handler": "app/main.py:list_tickets"},
+    {"method": "POST", "path": "/api/tickets", "handler": "app/main.py:create_ticket"},
+    {"method": "GET",  "path": "/api/tickets/{tid}", "handler": "app/main.py:get_ticket"},
+    {"method": "POST", "path": "/api/tickets/{tid}/messages", "handler": "app/main.py:add_message"},
+    {"method": "POST", "path": "/api/tickets/{tid}/send-reply", "handler": "app/main.py:send_reply"},
+    {"method": "POST", "path": "/api/tickets/{tid}/actions/{aid}/approve", "handler": "app/main.py:approve"},
+    {"method": "POST", "path": "/api/tickets/{tid}/actions/{aid}/reject", "handler": "app/main.py:reject"},
+    {"method": "GET",  "path": "/api/settings", "handler": "app/main.py:get_settings"},
+    {"method": "POST", "path": "/api/settings", "handler": "app/main.py:set_settings"},
+    {"method": "POST", "path": "/api/reset", "handler": "app/main.py:reset"},
+    {"method": "GET",  "path": "/api/audit", "handler": "app/main.py:audit"},
+    {"method": "GET",  "path": "/api/analytics", "handler": "app/main.py:analytics"}
+  ],
+  "core_functions": [
+    {"name": "analyze", "file": "app/agent.py", "role": "LLM → fallback на правила"},
+    {"name": "heuristic_analyze", "file": "app/agent.py", "role": "детермінований аналіз"},
+    {"name": "llm_analyze", "file": "app/agent.py", "role": "виклик Anthropic API + валідація дій"},
+    {"name": "execute", "file": "app/tools.py", "role": "check() + run() — єдина точка зміни стану"},
+    {"name": "build_context", "file": "app/context.py", "role": "похідні факти про учня"},
+    {"name": "score_reply", "file": "app/quality.py", "role": "оцінка відповіді агента"}
+  ],
+  "ui": "static/index.html",
+  "tests": ["tests/test_agent.py", "tests/test_tools.py", "tests/test_api.py", "tests/test_quality.py"]
+}

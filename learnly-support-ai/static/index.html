@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learnly Support AI</title>
+<style>
+  :root {
+    --bg:#f5f6f8; --panel:#fff; --line:#e4e7ec; --text:#1d2433; --muted:#667085;
+    --brand:#4f46e5; --brand-soft:#eef0ff; --green:#12805c; --green-soft:#e6f6ef;
+    --amber:#b54708; --amber-soft:#fff3e0; --red:#c0261d; --red-soft:#fdeceb; --blue-soft:#e8f1ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1218; --panel:#171b24; --line:#2a3040; --text:#e8ebf2; --muted:#97a0b3;
+      --brand:#8b8cff; --brand-soft:#23264a; --green:#4cc9a0; --green-soft:#12302a;
+      --amber:#f2b266; --amber-soft:#35290f; --red:#ff8d84; --red-soft:#3a1816; --blue-soft:#14233f; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; align-items:center; gap:16px; padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:700; }
+  header h1 span { color:var(--brand); }
+  nav { display:flex; gap:4px; }
+  nav button { border:0; background:none; padding:7px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font:inherit; font-weight:600; }
+  nav button.on { background:var(--brand-soft); color:var(--brand); }
+  .sp { flex:1; }
+  .pill { font-size:12px; padding:3px 9px; border-radius:99px; background:var(--blue-soft); color:var(--brand); font-weight:600; }
+  select, textarea, input { font:inherit; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:7px 9px; }
+  button.btn { border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:7px 12px; cursor:pointer; font:inherit; font-weight:600; }
+  button.btn:hover { border-color:var(--brand); }
+  button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+  button.primary:hover { opacity:.9; }
+  button.ok { background:var(--green); color:#fff; border-color:var(--green); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+
+  main.inbox { display:grid; grid-template-columns:300px minmax(340px,1fr) 380px; height:calc(100vh - 54px); }
+  .col { overflow:auto; border-right:1px solid var(--line); background:var(--panel); }
+  .col:last-child { border-right:0; }
+  .col h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0; padding:14px 16px 8px; }
+  .sim { padding:10px 16px 14px; border-bottom:1px solid var(--line); display:grid; gap:8px; }
+  .sim textarea { width:100%; resize:vertical; min-height:56px; }
+  .ticket { padding:11px 16px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .ticket:hover { background:var(--bg); }
+  .ticket.sel { background:var(--brand-soft); }
+  .ticket .r1 { display:flex; gap:8px; align-items:center; margin-bottom:3px; }
+  .ticket .nm { font-weight:600; flex:1; }
+  .ticket .tx { color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ticket.done { opacity:.62; }
+  .badge { font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; }
+  .P1 { background:var(--red-soft); color:var(--red); }
+  .P2 { background:var(--amber-soft); color:var(--amber); }
+  .P3 { background:var(--green-soft); color:var(--green); }
+  .risk-low { background:var(--green-soft); color:var(--green); }
+  .risk-medium { background:var(--amber-soft); color:var(--amber); }
+  .risk-high { background:var(--red-soft); color:var(--red); }
+  .tag { font-size:11px; padding:2px 7px; border-radius:6px; background:var(--bg); color:var(--muted); border:1px solid var(--line); }
+
+  .chat { padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .bubble { max-width:86%; padding:9px 12px; border-radius:12px; white-space:pre-wrap; }
+  .b-student { background:var(--bg); align-self:flex-start; border:1px solid var(--line); }
+  .b-agent { background:var(--brand-soft); align-self:flex-end; }
+  .b-system { align-self:center; font-size:12.5px; background:var(--green-soft); color:var(--green); border-radius:99px; padding:5px 12px; max-width:95%; }
+  .meta { font-size:11px; color:var(--muted); margin-top:3px; }
+  .composer { position:sticky; bottom:0; background:var(--panel); border-top:1px solid var(--line); padding:12px 16px; display:grid; gap:8px; }
+  .composer textarea { width:100%; min-height:70px; resize:vertical; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+  .card { margin:0 14px 12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+  .card h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:13px; }
+  .kv span:nth-child(odd) { color:var(--muted); }
+  .bar { height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:4px; }
+  .bar i { display:block; height:100%; }
+  ul.why { margin:0; padding-left:18px; }
+  ul.why li { margin-bottom:5px; }
+  .act { border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; }
+  .act.rec { border-color:var(--brand); background:var(--brand-soft); }
+  .act .t { font-weight:700; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .act .why2 { color:var(--muted); font-size:13px; margin:4px 0 8px; }
+  .act.st-executed { border-color:var(--green); background:var(--green-soft); }
+  .act.st-failed { border-color:var(--red); background:var(--red-soft); }
+  .act.st-rejected { opacity:.55; }
+  .empty { padding:40px 24px; color:var(--muted); text-align:center; }
+
+  main.dash { display:none; padding:22px; max-width:1100px; margin:0 auto; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:18px; }
+  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .kpi .v { font-size:28px; font-weight:800; letter-spacing:-.02em; }
+  .kpi .l { color:var(--muted); font-size:12.5px; }
+  .kpi .s { color:var(--green); font-size:12px; margin-top:2px; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .panel h3 { margin:0 0 12px; font-size:13px; }
+  .hb { display:grid; grid-template-columns:130px 1fr 28px; gap:8px; align-items:center; margin-bottom:7px; font-size:13px; }
+  .hb .bar { margin:0; height:10px; }
+  .note { color:var(--muted); font-size:12px; margin-top:14px; }
+  .audit { font:12px ui-monospace,Menlo,monospace; color:var(--muted); max-height:220px; overflow:auto; }
+  .audit div { padding:2px 0; border-bottom:1px dashed var(--line); }
+  @media (max-width:1000px){ main.inbox{ grid-template-columns:1fr; height:auto;} .col{ border-right:0; border-bottom:1px solid var(--line);} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Learnly <span>Support AI</span></h1>
+  <nav>
+    <button id="tab-inbox" class="on" onclick="showTab('inbox')">Звернення</button>
+    <button id="tab-dash" onclick="showTab('dash')">Дашборд</button>
+  </nav>
+  <div class="sp"></div>
+  <span class="pill" id="llm-pill">…</span>
+  <label class="row" style="gap:6px">Автономність
+    <select id="autonomy" onchange="setAutonomy(this.value)">
+      <option value="copilot">Copilot (усе через підтвердження)</option>
+      <option value="auto_low_risk">Auto: low-risk без підтвердження</option>
+    </select>
+  </label>
+  <button class="btn" onclick="resetDemo()">Reset demo</button>
+</header>
+
+<main class="inbox" id="inbox">
+  <section class="col">
+    <h2>Нове звернення (симуляція учня)</h2>
+    <div class="sim">
+      <select id="sim-student" onchange="fillDemo()"></select>
+      <textarea id="sim-text" placeholder="Повідомлення учня…"></textarea>
+      <button class="btn primary" onclick="simulate()">Надіслати як учень</button>
+    </div>
+    <h2>Черга (за пріоритетом)</h2>
+    <div id="tickets"></div>
+  </section>
+
+  <section class="col" id="mid">
+    <div class="empty">Оберіть звернення ліворуч або створіть нове.</div>
+  </section>
+
+  <section class="col" id="right">
+    <div class="empty">AI-копілот з'явиться тут.</div>
+  </section>
+</main>
+
+<main class="dash" id="dash"></main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api = async (path, opts = {}) => {
+  const r = await fetch('/api' + path, { headers: {'Content-Type':'application/json'}, ...opts });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); alert('Помилка: ' + (e.detail || r.status)); throw new Error(r.status); }
+  return r.json();
+};
+const INTENT = { refund:'Повернення коштів', double_charge:'Подвійне списання', access:'Доступ', deadline:'Дедлайн', transfer:'Перенос потоку', certificate:'Сертифікат', other:'Інше' };
+const GOAL = { needs_more_time:'Потрібно більше часу', disengaged_or_mismatch:'Курс не підійшов / не залучений', billing_error:'Помилка білінгу', access_problem:'Проблема з доступом', info:'Інформаційний запит', unknown:'Не визначено' };
+const SENT = { neutral:'нейтральний', negative:'негативний', angry:'роздратований' };
+const ARGLBL = { target_cohort:'потік', days:'днів', team:'команда', reason:'причина' };
+let students = [], current = null, ticket = null;
+
+function showTab(t) {
+  $('inbox').style.display = t === 'inbox' ? 'grid' : 'none';
+  $('dash').style.display = t === 'dash' ? 'block' : 'none';
+  $('tab-inbox').classList.toggle('on', t === 'inbox');
+  $('tab-dash').classList.toggle('on', t === 'dash');
+  if (t === 'dash') loadDash();
+}
+
+async function init() {
+  const h = await api('/health');
+  $('llm-pill').textContent = h.llm ? 'AI: LLM + правила' : 'AI: режим правил (fallback)';
+  $('autonomy').value = h.autonomy;
+  students = await api('/students');
+  $('sim-student').innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)} · ${esc(s.course)}</option>`).join('');
+  fillDemo();
+  await loadTickets();
+}
+function fillDemo() { const s = students.find(x => x.id === $('sim-student').value); if (s) $('sim-text').value = s.demo_message; }
+
+async function loadTickets() {
+  const items = await api('/tickets');
+  $('tickets').innerHTML = items.map(t => `
+    <div class="ticket ${t.id === current ? 'sel' : ''} ${t.status === 'resolved' ? 'done' : ''}" onclick="openTicket('${t.id}')">
+      <div class="r1"><span class="nm">${esc(t.student)}</span>
+        <span class="badge ${t.priority.label}">${t.priority.label}</span></div>
+      <div class="tx">${esc(t.last)}</div>
+      <div class="row" style="margin-top:5px">
+        <span class="tag">${esc(INTENT[t.intent] || '—')}</span>
+        <span class="tag">риск відтоку ${t.churn_risk}%</span>
+        ${t.status === 'resolved' ? `<span class="tag" style="color:var(--green)">✓ ${t.resolved_by === 'ai' ? 'AI' : 'закрито'}</span>` : ''}
+      </div></div>`).join('');
+}
+
+async function openTicket(id) { current = id; ticket = await api('/tickets/' + id); render(); loadTickets(); }
+async function simulate() {
+  const text = $('sim-text').value.trim(); if (!text) return;
+  const t = await api('/tickets', { method:'POST', body: JSON.stringify({ student_id: $('sim-student').value, message: text }) });
+  current = t.id; ticket = t; render(); loadTickets();
+}
+
+function render() {
+  const t = ticket; if (!t) return;
+  const a = t.analysis || {}, c = t.student_context || {};
+  const msgs = t.messages.map(m => {
+    if (m.role === 'system') return `<div class="bubble b-system">${esc(m.text)}</div>`;
+    const q = m.quality ? `<div class="meta">${esc(m.agent || 'Агент')} · якість відповіді: <b>${m.quality.score}/100</b> (${esc(m.quality.label)})${m.from_ai_draft ? ' · AI-чернетка' : ''}${m.quality.tips.length ? '<br>💡 ' + m.quality.tips.map(esc).join('; ') : ''}</div>` : '';
+    return `<div class="bubble b-${m.role}">${esc(m.text)}<div class="meta">${m.role === 'student' ? esc(t.student.name) : ''} ${esc(m.ts)}</div>${q}</div>`;
+  }).join('');
+  $('mid').innerHTML = `
+    <h2>${esc(t.student.name)} · ${esc(t.student.course)} · ${esc(t.id)}</h2>
+    <div class="chat">${msgs}</div>
+    <div class="composer">
+      <textarea id="reply" placeholder="Відповідь учню…"></textarea>
+      <div class="row">
+        <button class="btn" onclick="useDraft()">✨ Вставити чернетку AI</button>
+        <button class="btn primary" onclick="sendReply()">Надіслати</button>
+        <span class="meta" id="live-q"></span>
+      </div>
+    </div>`;
+  $('reply').addEventListener('input', () => { fromDraft = false; });
+
+  const pct = (n) => Math.max(0, Math.min(100, n));
+  const riskColor = a.churn_risk >= 65 ? 'var(--red)' : a.churn_risk >= 40 ? 'var(--amber)' : 'var(--green)';
+  const acts = (t.actions || []).map(x => `
+    <div class="act ${x.recommended ? 'rec' : ''} st-${x.status}">
+      <div class="t">${esc(x.title)} <span class="badge risk-${x.risk}">${x.risk}</span>
+        ${x.recommended ? '<span class="badge" style="background:var(--brand);color:#fff">рекомендовано</span>' : ''}
+        ${x.status !== 'proposed' ? `<span class="tag">${x.status === 'executed' ? '✓ виконано' + (x.executed_by === 'ai' ? ' (AI)' : '') : x.status === 'failed' ? '⛔ заблоковано' : 'відхилено'}</span>` : ''}</div>
+      ${Object.keys(x.args || {}).length ? `<div class="meta">${Object.entries(x.args).map(([k, v]) => `${ARGLBL[k] || k}: <b>${esc(v)}</b>`).join(' · ')}</div>` : ''}
+      <div class="why2">${esc(x.rationale)}</div>
+      ${x.error ? `<div class="why2" style="color:var(--red)">${esc(x.error)}</div>` : ''}
+      ${x.result ? `<div class="why2" style="color:var(--green)">${esc(x.result.summary)}</div>` : ''}
+      ${x.status === 'proposed' ? `<div class="row">
+        <button class="btn ok" onclick="act('${x.id}','approve')">${x.requires_approval ? 'Підтвердити' : 'Виконати'}</button>
+        <button class="btn" onclick="act('${x.id}','reject')">Відхилити</button></div>` : ''}
+    </div>`).join('') || '<div class="meta">Дій немає — потрібне уточнення.</div>';
+
+  $('right').innerHTML = `
+    <h2>AI-копілот ${a.source ? `<span class="tag" style="margin-left:6px">${a.source === 'llm' ? 'LLM' : 'правила'}</span>` : ''}</h2>
+    <div class="card"><h3>Розуміння</h3>
+      <div class="kv"><span>Намір</span><b>${esc(INTENT[a.intent])}</b>
+        <span>Справжня мета</span><b>${esc(GOAL[a.true_goal])}</b>
+        <span>Настрій</span><span>${esc(SENT[a.sentiment])}</span>
+        <span>Пріоритет</span><span><span class="badge ${a.priority?.label}">${a.priority?.label}</span></span></div>
+      <div class="meta" style="margin-top:8px">Ризик відтоку: <b>${a.churn_risk}%</b></div>
+      <div class="bar"><i style="width:${pct(a.churn_risk)}%;background:${riskColor}"></i></div></div>
+    <div class="card"><h3>Чому AI так вирішив</h3><ul class="why">${(a.reasoning || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
+    <div class="card"><h3>Рекомендовані дії</h3>${acts}</div>
+    <div class="card"><h3>Контекст учня</h3><div class="kv">
+      <span>Курс / потік</span><span>${esc(c.course_name)} · ${esc(c.cohort)}</span>
+      <span>Оплата</span><span>${c.amount_paid} грн, ${c.days_since_payment ?? '—'} дн. тому</span>
+      <span>Прогрес</span><span>${c.lessons_done}/${c.lessons_total} (за планом ${c.lessons_expected})</span>
+      <span>Останній вхід</span><span>${c.last_login_days_ago} дн. тому</span>
+      <span>Доступ</span><span>${c.access_active ? 'активний' : 'вимкнений'}</span>
+      <span>Повернення</span><span>${c.refunded ? 'вже повернено' : c.refund_eligible ? 'можливе (вікно відкрите)' : 'вікно закрите'}</span></div></div>
+    ${a.llm_error ? `<div class="card meta">LLM недоступний → fallback: ${esc(a.llm_error)}</div>` : ''}`;
+}
+
+let fromDraft = false;
+function useDraft() { $('reply').value = ticket.analysis.suggested_reply; fromDraft = true; }
+async function sendReply() {
+  const text = $('reply').value.trim(); if (!text) return;
+  ticket = await api(`/tickets/${current}/send-reply`, { method:'POST', body: JSON.stringify({ text, from_ai_draft: fromDraft, agent_name: 'Ви' }) });
+  fromDraft = false; render(); loadTickets();
+}
+async function act(aid, what) { ticket = await api(`/tickets/${current}/actions/${aid}/${what}`, { method:'POST' }); render(); loadTickets(); }
+async function setAutonomy(v) { await api('/settings', { method:'POST', body: JSON.stringify({ autonomy: v }) }); }
+async function resetDemo() { await api('/reset', { method:'POST' }); current = null; ticket = null; $('mid').innerHTML = '<div class="empty">Демо скинуто.</div>'; $('right').innerHTML = ''; await loadTickets(); if ($('dash').style.display === 'block') loadDash(); }
+
+function hbars(obj, labels) {
+  const max = Math.max(1, ...Object.values(obj));
+  const rows = Object.entries(obj).map(([k, v]) => `<div class="hb"><span>${esc(labels?.[k] || k)}</span><div class="bar"><i style="width:${v / max * 100}%;background:var(--brand)"></i></div><b>${v}</b></div>`).join('');
+  return rows || '<div class="meta">Поки немає даних</div>';
+}
+async function loadDash() {
+  const d = await api('/analytics'), a = d.automation, r = d.retention, q = d.quality;
+  const fmt = (n) => n == null ? '—' : n;
+  $('dash').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="v">${r.saved}</div><div class="l">Врятовано від повернення</div><div class="s">${r.saved_amount.toLocaleString('uk')} грн збережено</div></div>
+      <div class="kpi"><div class="v">${a.executed}<span style="font-size:15px;color:var(--muted)"> / ${a.proposed}</span></div><div class="l">Дій AI виконано / запропоновано</div><div class="s">${a.executed_by_ai} повністю автоматично</div></div>
+      <div class="kpi"><div class="v">${d.time_saved_min} хв</div><div class="l">Економія часу (модельна оцінка)</div></div>
+      <div class="kpi"><div class="v">${fmt(q.avg)}</div><div class="l">Середня якість відповідей</div><div class="s">AI-чернетки: ${fmt(q.avg_ai_draft)} · вручну: ${fmt(q.avg_manual)}</div></div>
+      <div class="kpi"><div class="v">${a.blocked_by_policy}</div><div class="l">Дій заблоковано політикою</div></div>
+      <div class="kpi"><div class="v">${fmt(d.avg_open_churn_risk)}${d.avg_open_churn_risk != null ? '%' : ''}</div><div class="l">Середній ризик відтоку (відкриті)</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Причини звернень</h3>${hbars(d.by_intent, INTENT)}</div>
+      <div class="panel"><h3>Відкрита черга за пріоритетом</h3>${hbars(d.by_priority)}
+        <div class="note">Усього звернень: ${d.total_tickets} · відкрито ${d.open} · закрито ${d.resolved}</div></div>
+      <div class="panel"><h3>Audit log (останні дії AI)</h3><div class="audit" id="audit"></div></div>
+      <div class="panel"><h3>Якість підтримки</h3>
+        <div class="kv"><span>Оцінено відповідей</span><b>${q.count}</b><span>Низька якість (&lt;55)</span><b>${q.low_quality}</b></div>
+        <div class="note">${esc(d.note)}</div></div>
+    </div>`;
+  const log = await api('/audit');
+  $('audit').innerHTML = log.slice().reverse().map(e => `<div>${esc(e.ts)} · ${esc(e.event)} · ${esc(e.tool || e.intent || e.ticket || '')} ${esc(e.by || e.reason || e.result || '')}</div>`).join('') || 'порожньо';
+}
+init();
+</script>
+</body>
+</html>
