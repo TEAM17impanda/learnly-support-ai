@@ -514,6 +514,239 @@
     background: var(--brand-soft);
     transform: translate(-1px, -1px);
   }
+  /* ============ TEACHER WORKSPACE STYLES ============ */
+  .clickable-student {
+    cursor: pointer;
+    color: var(--brand-accent);
+    text-decoration: underline dotted;
+    transition: all 0.12s;
+    display: inline-block;
+  }
+  .clickable-student:hover {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-radius: 3px;
+  }
+  .student-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .student-modal-field {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .student-modal-field label {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .student-modal-field div {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .teacher-main-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 400px;
+    gap: 20px;
+    align-items: start;
+  }
+  .scenario-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .scenario-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: #fdfbf7;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    box-shadow: var(--shadow-solid-sm);
+    transition: all 0.12s;
+    text-align: center;
+  }
+  .scenario-tab:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: var(--shadow-solid);
+  }
+  .scenario-tab.active {
+    background: var(--ink);
+    color: #ffffff;
+  }
+  .scenario-tab.active-conflict {
+    background: var(--red);
+    color: #ffffff;
+    border-color: var(--red);
+    box-shadow: 2px 2px 0 #7f1d1d;
+  }
+  .scenario-tab.active-stale {
+    background: var(--amber);
+    color: #ffffff;
+    border-color: var(--amber);
+    box-shadow: 2px 2px 0 #78350f;
+  }
+  .analysis-panel {
+    border: 1.5px solid var(--ink);
+    border-radius: 10px;
+    background: #fdfbf7;
+    overflow: hidden;
+    margin-top: 14px;
+  }
+  .analysis-panel-header {
+    background: var(--ink);
+    color: #ffffff;
+    padding: 8px 14px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .analysis-panel-body {
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed rgba(43,51,83,0.12);
+    font-size: 12px;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon { font-size: 14px; flex-shrink: 0; }
+  .action-card {
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+    margin-top: 10px;
+    box-shadow: var(--shadow-solid-sm);
+  }
+  .action-card.recommended {
+    border-color: #10b981;
+    background: #f0fdf4;
+    box-shadow: 2px 2px 0 #065f46;
+  }
+  .action-card.secondary {
+    border-style: dashed;
+    background: #faf8f5;
+  }
+  .action-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .action-desc {
+    font-size: 12px;
+    color: #555f77;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+  .action-rationale {
+    font-size: 11px;
+    color: #64748b;
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .guardrail-box {
+    background: #fef3c7;
+    border: 1.5px solid var(--amber);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+  }
+  .guardrail-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 11.5px;
+    color: var(--amber);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .guardrail-item {
+    font-size: 11.5px;
+    color: #78350f;
+    padding: 2px 0;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .teacher-chat-box {
+    display: flex;
+    flex-direction: column;
+    height: 700px;
+  }
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .chat-input-row input {
+    flex: 1;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    background: #fdfbf7;
+  }
+  .chat-input-row input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 2px var(--brand-accent);
+  }
+  .ai-typing {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    padding: 8px 12px;
+  }
+  .ai-typing span {
+    width: 7px;
+    height: 7px;
+    background: var(--ink);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+  .context-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .context-table td {
+    padding: 5px 8px;
+    border: 1px solid rgba(43,51,83,0.12);
+  }
+  .context-table td:first-child {
+    font-weight: 800;
+    background: #f4f0ea;
+    white-space: nowrap;
+    width: 40%;
+  }
 </style>
 </head>
 <body>
@@ -619,98 +852,183 @@
 
 <!-- ================= WORKSPACES ================= -->
 
-<!-- 1. TEACHER WORKSPACE (MVP DOUBLE BOOKING) -->
+<!-- 1. TEACHER WORKSPACE (MVP DOUBLE BOOKING + STALE RECORD) -->
 <main id="ws-teacher" class="workspace-container">
-  <div class="teacher-grid">
-    <!-- Left: Visual Calendar (Was / Now) -->
-    <div class="panel-box">
-      <div class="panel-header">
-        <h2>📅 Мій тижневий розклад (Олена Іванівна · Math 1-4 класи)</h2>
-        <span class="badge-tag" id="cal-status-tag" style="background:var(--amber-soft); color:var(--amber);">
-          ⚠️ Виявлено конфлікт у розкладі
-        </span>
+  <div class="teacher-main-grid">
+    <!-- LEFT: Calendar + Analysis Panel -->
+    <div>
+      <!-- Scenario Tabs -->
+      <div class="scenario-tabs">
+        <button class="scenario-tab active-conflict" id="tab-conflict" onclick="teacherSwitchScenario('conflict')">
+          ⚠️ Подвійне бронювання слота<br>
+          <span style="font-size:10px; font-weight:600; opacity:0.85;">П'ятниця 17:00 · 2 учні</span>
+        </button>
+        <button class="scenario-tab" id="tab-stale" onclick="teacherSwitchScenario('stale')">
+          🕐 Застарілий запис у календарі<br>
+          <span style="font-size:10px; font-weight:600; opacity:0.7;">Артем Литвин · Вівторок 16:00</span>
+        </button>
       </div>
 
-      <div class="calendar-view">
-        <p style="margin: 0 0 12px; font-size: 13px; color: #555f77;">
-          Інтерактивна сітка зайнятості. Конфлікт виникає через одночасне підтвердження слота двома учнями:
-        </p>
-
-        <div class="calendar-days">
-          <!-- Середа -->
-          <div class="cal-day-col">
-            <div class="cal-day-name">Середа</div>
-            <div class="cal-slot-card">
-              <div class="slot-time">15:00</div>
-              <div><b>Денис Коваль</b></div>
-              <div style="color:#64748b; font-size:11px;">Math 2 клас</div>
-            </div>
-          </div>
-
-          <!-- Четвер -->
-          <div class="cal-day-col">
-            <div class="cal-day-name">Четвер</div>
-            <div class="cal-slot-card slot-free">
-              <div class="slot-time">16:00</div>
-              <div><i>Вільний слот</i></div>
-            </div>
-          </div>
-
-          <!-- П'ятниця (КОНФЛІКТ) -->
-          <div class="cal-day-col">
-            <div class="cal-day-name">П'ятниця</div>
-            <div class="cal-slot-card slot-conflict" id="friday-slot">
-              <div class="slot-time">17:00</div>
-              <div><b>⚠️ КОНФЛІКТ (2 учні)</b></div>
-              <div style="font-size:11px; margin-top:2px;">1. Денис Коваль (10:15)<br>2. Марк Бондар (10:18)</div>
-            </div>
-          </div>
-
-          <!-- Субота (АЛЬТЕРНАТИВА) -->
-          <div class="cal-day-col">
-            <div class="cal-day-name">Субота</div>
-            <div class="cal-slot-card slot-free" id="saturday-slot">
-              <div class="slot-time">11:00</div>
-              <div><i>Вільний слот</i></div>
-              <div style="color:#2563eb; font-size:11px; font-weight:700;">(пропонується AI)</div>
-            </div>
+      <!-- Calendar Panel CONFLICT -->
+      <div class="panel-box" id="panel-calendar-conflict">
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>📅 Тижневий розклад (Олена Іванівна · Math 1-4 класи)</h2>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="teacherResetDemo()" title="Скинути розклад до початкового стану">🔄 Скинути розклад (Demo)</button>
+            <span class="badge-tag" id="cal-status-tag" style="background:var(--amber-soft); color:var(--amber);">⚠️ Виявлено конфлікт</span>
           </div>
         </div>
+        <div class="calendar-view">
+          <p style="margin: 0 0 12px; font-size: 13px; color: #555f77;">
+            Конфлікт: два учні забронювали той самий час (клікніть на ім'я учня для деталей):
+          </p>
+          <div class="calendar-days">
+            <div class="cal-day-col">
+              <div class="cal-day-name">Понеділок</div>
+              <div class="cal-slot-card slot-free" id="monday-slot">
+                <div class="slot-time">16:00</div>
+                <div id="monday-slot-content"><i>Вільний</i></div>
+              </div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Вівторок</div>
+              <div class="cal-slot-card" id="tuesday-conflict-slot">
+                <div class="slot-time">16:00</div>
+                <div><b class="clickable-student" onclick="showStudentCard('Артем Литвин')">Артем Литвин</b></div>
+                <div style="color:#64748b;font-size:11px;">Math 3 клас</div>
+              </div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Середа</div>
+              <div class="cal-slot-card">
+                <div class="slot-time">15:00</div>
+                <div><b class="clickable-student" onclick="showStudentCard('Денис Коваль')">Денис Коваль</b></div>
+                <div style="color:#64748b;font-size:11px;">Math 2 клас</div>
+              </div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Четвер</div>
+              <div class="cal-slot-card slot-free"><div class="slot-time">16:00</div><div><i>Вільний</i></div></div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">П'ятниця</div>
+              <div class="cal-slot-card slot-conflict" id="friday-slot">
+                <div class="slot-time">17:00</div>
+                <div><b>⚠️ КОНФЛІКТ</b></div>
+                <div style="font-size:10.5px;margin-top:3px;">
+                  1. <span class="clickable-student" onclick="showStudentCard('Денис Коваль')">Денис Коваль</span> (10:15)<br>
+                  2. <span class="clickable-student" onclick="showStudentCard('Марк Бондар')">Марк Бондар</span> (10:18)
+                </div>
+              </div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Субота</div>
+              <div class="cal-slot-card slot-free" id="saturday-slot">
+                <div class="slot-time">11:00</div>
+                <div id="saturday-slot-content"><i>Вільний</i></div>
+                <div id="saturday-slot-note" style="color:#2563eb;font-size:11px;font-weight:700;">(AI пропонує)</div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-panel" id="analysis-conflict-panel" style="display:none;">
+            <div class="analysis-panel-header">🤖 AI Аналіз — що перевірено</div>
+            <div class="analysis-panel-body" id="conflict-checks-body"></div>
+          </div>
+          <div class="analysis-panel" id="context-conflict-panel" style="display:none;">
+            <div class="analysis-panel-header">📋 Верифікований контекст</div>
+            <div class="analysis-panel-body"><table class="context-table" id="conflict-context-table"></table></div>
+          </div>
+          <div id="conflict-actions-container" style="display:none; margin-top:4px;"></div>
+          <div class="guardrail-box" id="conflict-guardrails" style="display:none;">
+            <div class="guardrail-title">🔒 Guardrails — що AI не робить без дозволу</div>
+            <div id="conflict-guardrails-body"></div>
+          </div>
+        </div>
+      </div>
 
-        <div style="background:#fdfbf7; border:1.5px solid var(--ink); border-radius:10px; padding:12px; font-size:12.5px;">
-          <b>💡 Як працює AI Customer Supporter у цьому кейсі:</b><br>
-          Агент аналізує таймстампи бронювань, правила школи (хто перший забронював — той зберігає час), перевіряє вільні слоти в календарі викладача та готує автоматичне перенесення другого учня на найближчий зручний час.
+      <!-- Calendar Panel STALE -->
+      <div class="panel-box" id="panel-calendar-stale" style="display:none;">
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>📅 Тижневий розклад (Олена Іванівна · Math 1-4 класи)</h2>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="teacherSyncStaleStatus()" title="Оновити статус з панелі адміністратора">🔄 Перевірити статус адміна</button>
+            <span class="badge-tag" id="stale-status-tag" style="background:var(--amber-soft); color:var(--amber);">🕐 Застарілий запис</span>
+          </div>
+        </div>
+        <div class="calendar-view">
+          <p style="margin: 0 0 12px; font-size: 13px; color: #555f77;">
+            Учень залишився у розкладі після завершення курсу — автосинхронізація не спрацювала:
+          </p>
+          <div class="calendar-days">
+            <div class="cal-day-col">
+              <div class="cal-day-name">Понеділок</div>
+              <div class="cal-slot-card slot-free"><div class="slot-time">16:00</div><div><i>Вільний</i></div></div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Вівторок</div>
+              <div class="cal-slot-card" id="tuesday-slot" style="background:#fff8ed; border-color:var(--amber);">
+                <div class="slot-time" style="color:var(--amber);">16:00</div>
+                <div><b style="color:var(--amber);" class="clickable-student" onclick="showStudentCard('Артем Литвин')">🕐 Артем Литвин</b></div>
+                <div style="font-size:10.5px;margin-top:3px;color:#78350f;">Курс завершено 7 дн. тому<br>Запис застарілий</div>
+              </div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Середа</div>
+              <div class="cal-slot-card"><div class="slot-time">15:00</div><div><b class="clickable-student" onclick="showStudentCard('Денис Коваль')">Денис Коваль</b></div><div style="color:#64748b;font-size:11px;">Math 2 клас</div></div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">Четвер</div>
+              <div class="cal-slot-card slot-free"><div class="slot-time">16:00</div><div><i>Вільний</i></div></div>
+            </div>
+            <div class="cal-day-col">
+              <div class="cal-day-name">П'ятниця</div>
+              <div class="cal-slot-card"><div class="slot-time">17:00</div><div><b class="clickable-student" onclick="showStudentCard('Марк Бондар')">Марк Бондар</b></div></div>
+            </div>
+          </div>
+          <div class="analysis-panel" id="analysis-stale-panel" style="display:none;">
+            <div class="analysis-panel-header">🤖 AI Аналіз — що перевірено</div>
+            <div class="analysis-panel-body" id="stale-checks-body"></div>
+          </div>
+          <div class="analysis-panel" id="context-stale-panel" style="display:none;">
+            <div class="analysis-panel-header">📋 Верифікований контекст</div>
+            <div class="analysis-panel-body"><table class="context-table" id="stale-context-table"></table></div>
+          </div>
+          <div id="stale-actions-container" style="display:none; margin-top:4px;"></div>
+          <div class="guardrail-box" id="stale-guardrails" style="display:none;">
+            <div class="guardrail-title">🔒 Guardrails — що AI не робить без дозволу</div>
+            <div id="stale-guardrails-body"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Right: Chat & Quick Action -->
-    <div class="panel-box chat-box">
+    <!-- RIGHT: Chat Panel -->
+    <div class="panel-box teacher-chat-box">
       <div class="panel-header">
-        <h2>💬 Звернення до AI-асистента</h2>
+        <h2>💬 AI-асистент розкладу</h2>
+        <span class="badge-tag" style="background:#d1fae5;color:#065f46;font-size:10px;">ONLINE</span>
       </div>
-
-      <div class="chat-stream" id="teacher-chat">
-        <div class="bubble b-user">
-          <b>Викладач:</b><br>
-          У мене в розкладі на п'ятницю 17:00 стоять одразу два учні: Денис Коваль і Марк Бондар! Допоможіть вирішити конфлікт.
-        </div>
-        <div class="bubble b-ai" id="teacher-ai-reply">
+      <div class="chat-stream" id="teacher-chat" style="flex:1;">
+        <div class="bubble b-ai">
           <b>AI Support Agent:</b><br>
-          Виявила накладку в календарі: слот П'ятниця 17:00 забронювали Денис Коваль (10:15) та Марк Бондар (10:18).
-          <br><br>
-          Рекомендую зберегти слот за Денисом (перше бронювання), а Марку запропонувати альтернативний вільний слот — <b>Субота 11:00</b> зі збереженням вашого авторства.
+          Добрий день, Олено Іванівно! 👋<br><br>
+          Оберіть сценарій або напишіть своє запитання — я перевірю календар та підготую рекомендацію.
         </div>
       </div>
-
       <div class="chat-actions-bar">
-        <button class="btn ok" id="btn-resolve-conflict" style="width:100%; font-size:13.5px; padding:10px;" onclick="teacherResolveConflict()">
-          ⚡ Підтвердити вирішення конфлікту
-        </button>
+        <div class="preset-row" style="margin-bottom:0;">
+          <div class="preset-chip" style="flex:1;" onclick="teacherQuickSend('У мене в розкладі на п\'ятницю 17:00 стоять одразу два учні: Денис Коваль і Марк Бондар! Допоможіть вирішити конфлікт.')">⚠️ Подвійне бронювання</div>
+          <div class="preset-chip" style="flex:1;" onclick="teacherQuickSend('Учень Артем Литвин завершив індивідуальний курс ще минулого тижня, але досі займає слот у вівторок 16:00.')">🕐 Застарілий запис</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="teacher-chat-input" placeholder="Напишіть повідомлення..." onkeydown="if(event.key==='Enter') teacherSendCustom()">
+          <button class="btn primary" onclick="teacherSendCustom()">↑</button>
+        </div>
       </div>
     </div>
   </div>
 </main>
+
 
 <!-- 2. PARENT WORKSPACE (PAYMENT GUARDRAIL) -->
 <main id="ws-parent" class="workspace-container" style="display:none;">
@@ -860,47 +1178,545 @@ function loginAs(role) {
   if (role === 'admin') loadAdminQueue();
 }
 
-/* TEACHER WORKSPACE */
-async function teacherResolveConflict() {
-  const btn = $('btn-resolve-conflict');
-  btn.disabled = true;
-  btn.textContent = 'Зберігаю зміни в системі...';
+/* ============================
+   TEACHER WORKSPACE — full impl
+   ============================ */
 
-  const res = await api('/role-chat/resolve-booking', {
-    method: 'POST',
-    body: JSON.stringify({ chosen_slot: 'Субота 11:00', student_to_move: 'Марк Бондар' })
-  });
+let currentTeacherScenario = 'conflict';
+let currentConflictData = null;
 
-  // Оновлюємо розклад "Було / Стало"
-  const fri = $('friday-slot');
-  fri.className = 'cal-slot-card slot-resolved';
-  fri.innerHTML = `
-    <div class="slot-time">17:00</div>
-    <div><b>✅ Денис Коваль</b></div>
-    <div style="font-size:11px; color:#065f46;">Слот підтверджено</div>
-  `;
+function teacherSwitchScenario(scenario) {
+  currentTeacherScenario = scenario;
+  const isConflict = scenario === 'conflict';
 
-  const sat = $('saturday-slot');
-  sat.className = 'cal-slot-card slot-resolved';
-  sat.innerHTML = `
-    <div class="slot-time">11:00</div>
-    <div><b>✅ Марк Бондар</b></div>
-    <div style="font-size:11px; color:#065f46;">Перенесено (узгоджено)</div>
-  `;
+  // Tab styles
+  $('tab-conflict').className = 'scenario-tab' + (isConflict ? ' active-conflict' : '');
+  $('tab-stale').className = 'scenario-tab' + (!isConflict ? ' active-stale' : '');
 
-  $('cal-status-tag').textContent = '✅ Розклад узгоджено, конфліктів немає';
-  $('cal-status-tag').style.background = '#d1fae5';
-  $('cal-status-tag').style.color = '#065f46';
+  // Panel visibility
+  $('panel-calendar-conflict').style.display = isConflict ? 'block' : 'none';
+  $('panel-calendar-stale').style.display = !isConflict ? 'block' : 'none';
+
+  if (!isConflict) {
+    teacherSyncStaleStatus();
+  }
+}
+
+function teacherQuickSend(text) {
+  const chat = $('teacher-chat');
+  chat.innerHTML += `<div class="bubble b-user"><b>Олена Іванівна:</b><br>${esc(text)}</div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  chat.innerHTML += `<div class="bubble b-ai" id="${typingId}"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  api('/teacher-chat', { method: 'POST', body: JSON.stringify({ message: text }) })
+    .then(r => {
+      const typingEl = $(typingId);
+      if (typingEl) typingEl.remove();
+      renderTeacherResponse(r, chat);
+    })
+    .catch(e => {
+      const typingEl = $(typingId);
+      if (typingEl) typingEl.innerHTML = `<b>AI Support Agent:</b><br>⚠️ Помилка зв'язку: ${e.message}`;
+    });
+}
+
+function teacherSendCustom() {
+  const input = $('teacher-chat-input');
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  teacherQuickSend(val);
+}
+
+function renderTeacherResponse(r, chat) {
+  // Switch to correct scenario panel based on intent
+  if (r.intent === 'double_booking') {
+    teacherSwitchScenario('conflict');
+  } else if (r.intent === 'stale_record') {
+    teacherSwitchScenario('stale');
+  }
+
+  // Add AI reply bubble
+  chat.innerHTML += `
+    <div class="bubble b-ai">
+      <b>AI Support Agent:</b><br>
+      ${esc(r.ai_reply || '')}
+    </div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  // Render analysis panels
+  if (r.intent === 'double_booking') {
+    renderConflictAnalysis(r);
+  } else if (r.intent === 'stale_record') {
+    renderStaleAnalysis(r);
+  }
+}
+
+function renderConflictAnalysis(r) {
+  currentConflictData = r;
+
+  // Checks performed
+  const checksBody = $('conflict-checks-body');
+  if (r.checks_performed && r.checks_performed.length) {
+    checksBody.innerHTML = r.checks_performed.map(c =>
+      `<div class="check-item"><span class="check-icon">✓</span><span>${esc(c)}</span></div>`
+    ).join('');
+    $('analysis-conflict-panel').style.display = 'block';
+  }
+
+  // Context table
+  const ctx = r.verified_context || {};
+  const tbl = $('conflict-context-table');
+  const rows = [];
+  if (ctx.slot) rows.push(['Слот', `<b>${esc(ctx.slot)}</b>`]);
+  if (ctx.primary_student && ctx.primary_student.name) rows.push(['Перше бронювання', `${esc(ctx.primary_student.name)} о ${esc(ctx.primary_student.booked_at || '')} <span style="background:#d1fae5;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800;">ПРІОРИТЕТ</span>`]);
+  if (ctx.conflict_student && ctx.conflict_student.name) rows.push(['Конфліктний запис', `${esc(ctx.conflict_student.name)} о ${esc(ctx.conflict_student.booked_at || '')} <span style="background:#fee2e2;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800;">КОНФЛІКТ</span>`]);
+  if (ctx.alternatives && ctx.alternatives.length) rows.push(['Альтернативи AI', ctx.alternatives.map(a => `<b>${esc(a)}</b>`).join(', ')]);
+  if (rows.length) {
+    tbl.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('');
+    $('context-conflict-panel').style.display = 'block';
+  }
+
+  // Actions
+  const acts = r.proposed_actions || [];
+  if (acts.length) {
+    const container = $('conflict-actions-container');
+    const primaryName = ctx.primary_student?.name || 'Денис Коваль';
+    const conflictName = ctx.conflict_student?.name || 'Марк Бондар';
+    const alts = ctx.alternatives || ['Субота 11:00', 'Субота 14:00', 'Понеділок 16:00'];
+    const isResolved = ctx.resolved;
+
+    container.innerHTML = acts.map(a => `
+      <div class="action-card ${a.recommended ? 'recommended' : 'secondary'}">
+        <div class="action-title">${a.recommended ? '⭐ ' : ''}${esc(a.title)}</div>
+        <div class="action-desc">${esc(a.description)}</div>
+        <div class="action-rationale">💡 ${esc(a.rationale)}</div>
+        ${a.recommended && !isResolved ? `
+          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:12px; margin:10px 0;">
+            <div style="font-weight:800; font-size:12px; margin-bottom:6px; color:#1e293b;">
+              1. Кого зберегти на слоті ${esc(ctx.slot || 'Пт 17:00')}?
+            </div>
+            <div style="display:flex; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                <input type="radio" name="conflict_keep" value="${esc(primaryName)}" checked onchange="updateConflictResolutionPreview()">
+                <b>${esc(primaryName)}</b> <span style="font-size:10px; color:#0f8544; font-weight:800;">(10:15 · черга)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                <input type="radio" name="conflict_keep" value="${esc(conflictName)}" onchange="updateConflictResolutionPreview()">
+                <b>${esc(conflictName)}</b> <span style="font-size:10px; color:#64748b; font-weight:700;">(10:18)</span>
+              </label>
+            </div>
+
+            <div style="font-weight:800; font-size:12px; margin-bottom:6px; color:#1e293b;">
+              2. На який слот перенести другого учня?
+            </div>
+            <select id="teacher-alt-slot-select" style="width:100%; padding:6px 10px; border-radius:6px; border:1.5px solid var(--ink); font-weight:700; font-size:12px; margin-bottom:10px; background:#fff;" onchange="updateConflictResolutionPreview()">
+              ${alts.map((alt, idx) => `
+                <option value="${esc(alt)}" ${idx === 0 ? 'selected' : ''}>
+                  ${idx === 0 ? '🌟 ' + esc(alt) + ' (рекомендовано AI)' : '🔹 ' + esc(alt) + ' (вільний слот)'}
+                </option>
+              `).join('')}
+            </select>
+
+            <div id="conflict-action-summary" style="font-size:11.5px; color:#334155; margin-bottom:10px; background:#ffffff; padding:8px 10px; border-radius:6px; border:1px dashed #94a3b8;">
+              👉 <b>${esc(primaryName)}</b> залишається на ${esc(ctx.slot || 'Пт 17:00')}, а <b>${esc(conflictName)}</b> переноситься на <b>${esc(alts[0] || 'Субота 11:00')}</b>.
+            </div>
+
+            <button class="btn ok" style="width:100%;" onclick="teacherSubmitCustomConflict()">
+              ✅ Підтвердити і виконати перенесення
+            </button>
+          </div>
+        ` : ''}
+        ${!a.recommended ? `<span style="font-size:11px; color:#64748b; font-style:italic;">↩ Резервний варіант</span>` : ''}
+      </div>
+    `).join('');
+    container.style.display = 'block';
+  }
+
+  // Guardrails
+  const gr = r.guardrails || [];
+  if (gr.length) {
+    $('conflict-guardrails-body').innerHTML = gr.map(g =>
+      `<div class="guardrail-item"><span>⛔</span><span>${esc(g)}</span></div>`
+    ).join('');
+    $('conflict-guardrails').style.display = 'block';
+  }
+}
+
+function updateConflictResolutionPreview() {
+  const keepEl = document.querySelector('input[name="conflict_keep"]:checked');
+  if (!keepEl || !currentConflictData) return;
+  const toKeep = keepEl.value;
+  const ctx = currentConflictData.verified_context || {};
+  const primaryName = ctx.primary_student?.name || 'Денис Коваль';
+  const conflictName = ctx.conflict_student?.name || 'Марк Бондар';
+  const toMove = toKeep === primaryName ? conflictName : primaryName;
+  const slotEl = $('teacher-alt-slot-select');
+  const chosenSlot = slotEl ? slotEl.value : 'Субота 11:00';
+  const sumEl = $('conflict-action-summary');
+  if (sumEl) {
+    sumEl.innerHTML = `👉 <b>${esc(toKeep)}</b> залишається на ${esc(ctx.slot || 'Пт 17:00')}, а <b>${esc(toMove)}</b> переноситься на <b>${esc(chosenSlot)}</b>.`;
+  }
+}
+
+async function teacherSubmitCustomConflict() {
+  const keepEl = document.querySelector('input[name="conflict_keep"]:checked');
+  const ctx = currentConflictData ? currentConflictData.verified_context || {} : {};
+  const primaryName = ctx.primary_student?.name || 'Денис Коваль';
+  const conflictName = ctx.conflict_student?.name || 'Марк Бондар';
+  const toKeep = keepEl ? keepEl.value : primaryName;
+  const toMove = toKeep === primaryName ? conflictName : primaryName;
+  const slotEl = $('teacher-alt-slot-select');
+  const chosenSlot = slotEl ? slotEl.value : 'Субота 11:00';
 
   const chat = $('teacher-chat');
-  chat.innerHTML += `
-    <div class="bubble b-ai" style="border-color:#10b981; background:#f0fdf4;">
-      <b>AI Support Agent:</b><br>
-      🎉 <b>Успішно оновлено:</b> ${esc(res.message)}
-    </div>
-  `;
+  chat.innerHTML += `<div class="bubble b-user"><b>Олена Іванівна:</b><br>✅ Підтверджую: залишаємо ${esc(toKeep)} на Пт 17:00, а ${esc(toMove)} переносимо на ${esc(chosenSlot)}.</div>`;
   chat.scrollTop = chat.scrollHeight;
-  btn.textContent = '✓ Конфлікт розкладу успішно вирішено';
+
+  try {
+    const res = await api('/teacher-chat/resolve-booking', {
+      method: 'POST',
+      body: JSON.stringify({
+        chosen_slot: chosenSlot,
+        student_to_move: toMove,
+        student_to_keep: toKeep
+      })
+    });
+
+    // Update Friday slot
+    const fri = $('friday-slot');
+    if (fri) {
+      fri.className = 'cal-slot-card slot-resolved';
+      fri.innerHTML = `<div class="slot-time">17:00</div><div><b>✅ <span class="clickable-student" onclick="showStudentCard('${esc(toKeep)}')">${esc(toKeep)}</span></b></div><div style="font-size:11px;color:#065f46;">Слот закріплено</div>`;
+    }
+
+    // Update alternative slot visually
+    if (chosenSlot.includes('Субота 11:00')) {
+      const sat = $('saturday-slot');
+      if (sat) {
+        sat.className = 'cal-slot-card slot-resolved';
+        sat.innerHTML = `<div class="slot-time">11:00</div><div><b>✅ <span class="clickable-student" onclick="showStudentCard('${esc(toMove)}')">${esc(toMove)}</span></b></div><div style="font-size:11px;color:#065f46;">Перенесено (узгоджено)</div>`;
+      }
+    } else if (chosenSlot.includes('Понеділок 16:00')) {
+      const mon = $('monday-slot');
+      if (mon) {
+        mon.className = 'cal-slot-card slot-resolved';
+        mon.innerHTML = `<div class="slot-time">16:00</div><div><b>✅ <span class="clickable-student" onclick="showStudentCard('${esc(toMove)}')">${esc(toMove)}</span></b></div><div style="font-size:11px;color:#065f46;">Перенесено (узгоджено)</div>`;
+      }
+    } else {
+      const sat = $('saturday-slot');
+      if (sat) {
+        sat.className = 'cal-slot-card slot-resolved';
+        sat.innerHTML = `<div class="slot-time">14:00</div><div><b>✅ <span class="clickable-student" onclick="showStudentCard('${esc(toMove)}')">${esc(toMove)}</span></b></div><div style="font-size:11px;color:#065f46;">Перенесено (${esc(chosenSlot)})</div>`;
+      }
+    }
+
+    $('cal-status-tag').textContent = '✅ Конфлікт усунуто';
+    $('cal-status-tag').style.background = '#d1fae5';
+    $('cal-status-tag').style.color = '#065f46';
+
+    const actionsHtml = (res.actions_taken || []).map(a => `<div style="padding:2px 0; font-size:12px;">✓ ${esc(a)}</div>`).join('');
+    chat.innerHTML += `
+      <div class="bubble b-ai" style="border-color:#10b981; background:#f0fdf4;">
+        <b>AI Support Agent:</b><br>
+        🎉 <b>Конфлікт успішно вирішено!</b><br><br>
+        ${esc(res.message)}<br><br>
+        <b>Виконані дії:</b><br>${actionsHtml}
+      </div>`;
+    chat.scrollTop = chat.scrollHeight;
+
+    document.querySelectorAll('#conflict-actions-container button').forEach(b => {
+      b.disabled = true;
+      b.textContent = '✓ Виконано';
+      b.style.background = '#6b7280';
+    });
+  } catch(e) {
+    chat.innerHTML += `<div class="bubble b-ai">⚠️ Помилка: ${esc(e.message)}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+function renderStaleAnalysis(r) {
+  // Checks performed
+  const checksBody = $('stale-checks-body');
+  if (r.checks_performed && r.checks_performed.length) {
+    checksBody.innerHTML = r.checks_performed.map(c =>
+      `<div class="check-item"><span class="check-icon">✓</span><span>${esc(c)}</span></div>`
+    ).join('');
+    $('analysis-stale-panel').style.display = 'block';
+  }
+
+  // Context table
+  const ctx = r.verified_context || {};
+  const tbl = $('stale-context-table');
+  const rows = [];
+  if (ctx.name) rows.push(['Учень', `<b>${esc(ctx.name)}</b>`]);
+  if (ctx.course) rows.push(['Курс', esc(ctx.course)]);
+  if (ctx.progress_pct !== undefined) rows.push(['Прогрес', `<b style="color:#0f8544;">${ctx.progress_pct}%</b> <span style="background:#d1fae5;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800;">ЗАВЕРШЕНО</span>`]);
+  if (ctx.last_lesson_date) rows.push(['Останній урок', esc(ctx.last_lesson_date)]);
+  if (ctx.certificate_issued !== undefined) rows.push(['Сертифікат', ctx.certificate_issued ? `✅ Видано ${esc(ctx.certificate_date||'')}` : '❌ Не видано']);
+  if (ctx.calendar_slot) rows.push(['Слот у календарі', `<b style="color:var(--amber);">${esc(ctx.calendar_slot)}</b> (${esc(ctx.slot_status||'')})`]);
+  if (ctx.auto_sync_status) rows.push(['Синхронізація', `<span style="color:var(--red);font-weight:800;">${esc(ctx.auto_sync_status)}</span>`]);
+  if (ctx.sync_error) rows.push(['Помилка', `<code style="font-size:10px;">${esc(ctx.sync_error)}</code>`]);
+  if (ctx.next_module_decision) rows.push(['Рішення батьків', `<b style="color:var(--amber);">${esc(ctx.next_module_decision)}</b> — очікується`]);
+  if (rows.length) {
+    tbl.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('');
+    $('context-stale-panel').style.display = 'block';
+  }
+
+  // Actions
+  const acts = r.proposed_actions || [];
+  if (acts.length) {
+    const container = $('stale-actions-container');
+    container.innerHTML = acts.map(a => `
+      <div class="action-card ${a.recommended ? 'recommended' : 'secondary'}">
+        <div class="action-title">${a.recommended ? '⭐ ' : ''}${esc(a.title)}</div>
+        <div class="action-desc">${esc(a.description)}</div>
+        <div class="action-rationale">💡 ${esc(a.rationale)}</div>
+        ${a.recommended && a.type === 'create_ticket' ? `
+          <button class="btn ok" style="width:100%;" onclick="teacherConfirmStaleEscalation('${esc(a.id)}')">
+            📋 Підтвердити — передати адміністратору
+          </button>
+        ` : ''}
+        ${!a.recommended ? `<span style="font-size:11px; color:#64748b; font-style:italic;">↩ Технічна альтернатива (потребує дозволу)</span>` : ''}
+      </div>
+    `).join('');
+    container.style.display = 'block';
+  }
+
+  // Guardrails
+  const gr = r.guardrails || [];
+  if (gr.length) {
+    $('stale-guardrails-body').innerHTML = gr.map(g =>
+      `<div class="guardrail-item"><span>⛔</span><span>${esc(g)}</span></div>`
+    ).join('');
+    $('stale-guardrails').style.display = 'block';
+  }
+}
+
+async function teacherConfirmStaleEscalation(actionId) {
+  const chat = $('teacher-chat');
+  chat.innerHTML += `<div class="bubble b-user"><b>Олена Іванівна:</b><br>✅ Підтверджую — передати тікет адміністратору.</div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await api('/teacher-chat/escalate-stale', {
+      method: 'POST',
+      body: JSON.stringify({ confirm: true })
+    });
+
+    const tue = $('tuesday-slot');
+    if (tue) {
+      tue.style.background = '#fef9c3';
+      tue.style.borderColor = '#ca8a04';
+      tue.innerHTML = `
+        <div class="slot-time" style="color:#ca8a04;">16:00</div>
+        <div><b style="color:#92400e;" class="clickable-student" onclick="showStudentCard('Артем Литвин')">📋 Артем Литвин</b></div>
+        <div style="font-size:10.5px;color:#78350f;">Тікет ESC-102 передано<br>Адміністратор розглядає</div>`;
+    }
+    $('stale-status-tag').textContent = '📋 Тікет ESC-102 створено';
+    $('stale-status-tag').style.background = '#fef3c7';
+    $('stale-status-tag').style.color = '#78350f';
+
+    const esc_data = res.escalation || {};
+    chat.innerHTML += `
+      <div class="bubble b-ai" style="border-color:#ca8a04; background:#fef9c3;">
+        <b>AI Support Agent:</b><br>
+        📋 <b>Тікет успішно сформовано і передано!</b><br><br>
+        ${esc(res.message)}<br><br>
+        <b>Тікет:</b> ${esc(esc_data.id || 'ESC-102')} · Пріоритет: ${esc(esc_data.priority || 'P2')}<br>
+        <b>Слот</b> Вівторок 16:00 залишається активним до підтвердження адміністратором —
+        <i>видалення без погодження з навчальним відділом заблоковано guardrail'ами.</i>
+      </div>`;
+    chat.scrollTop = chat.scrollHeight;
+
+    document.querySelectorAll('#stale-actions-container button').forEach(b => {
+      b.disabled = true;
+      b.textContent = '✓ Тікет передано';
+      b.style.background = '#6b7280';
+    });
+  } catch(e) {
+    chat.innerHTML += `<div class="bubble b-ai">⚠️ Помилка: ${esc(e.message)}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+async function teacherSyncStaleStatus() {
+  try {
+    const res = await api('/teacher-chat/calendar');
+    const cal = res.calendar || {};
+    const esc102 = res.escalation_102 || {};
+
+    if (cal.stale_resolved || esc102.status === 'resolved') {
+      const tue = $('tuesday-slot');
+      if (tue) {
+        tue.className = 'cal-slot-card slot-free';
+        tue.style.background = '#f0fdf4';
+        tue.style.borderColor = '#10b981';
+        tue.innerHTML = `
+          <div class="slot-time" style="color:#0f8544;">16:00</div>
+          <div><b style="color:#0f8544;">✅ Вільний</b></div>
+          <div style="font-size:10.5px;color:#065f46;">Адміністратор звільнив слот<br>(Артем Литвин випущений)</div>`;
+      }
+      $('stale-status-tag').textContent = '✅ Слот звільнено';
+      $('stale-status-tag').style.background = '#d1fae5';
+      $('stale-status-tag').style.color = '#065f46';
+
+      const chat = $('teacher-chat');
+      chat.innerHTML += `
+        <div class="bubble b-ai" style="border-color:#10b981; background:#f0fdf4;">
+          <b>AI Support Agent:</b><br>
+          🎉 <b>Адміністратор погодив і закрив тікет ESC-102!</b><br>
+          Слот Вівторок 16:00 успішно звільнено у вашому розкладі.
+        </div>`;
+      chat.scrollTop = chat.scrollHeight;
+    } else if (cal.stale_escalated || esc102.status === 'pending') {
+      $('stale-status-tag').textContent = '📋 Тікет ESC-102 на розгляді адміна';
+      $('stale-status-tag').style.background = '#fef3c7';
+      $('stale-status-tag').style.color = '#78350f';
+    }
+  } catch(e) {
+    console.error('Error syncing calendar:', e);
+  }
+}
+
+async function showStudentCard(name) {
+  try {
+    const s = await api(`/teacher/students/${encodeURIComponent(name)}`);
+    const modalContent = $('student-modal-content');
+    modalContent.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; border-bottom:1.5px dashed #cbd5e1; padding-bottom:12px;">
+        <div style="width:44px; height:44px; border-radius:50%; background:#e0e7ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-size:22px;">🎓</div>
+        <div>
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:18px; color:var(--ink);">${esc(s.name)}</h3>
+          <span style="font-size:12px; color:#64748b; font-weight:700;">${esc(s.grade)} · ${esc(s.course)}</span>
+        </div>
+      </div>
+      <div class="student-modal-grid">
+        <div class="student-modal-field">
+          <label>Батьки / Контакт</label>
+          <div>${esc(s.parent_name)}</div>
+          <div style="font-size:11.5px; color:#2563eb; font-weight:600; margin-top:2px;">${esc(s.parent_phone)}</div>
+        </div>
+        <div class="student-modal-field">
+          <label>Баланс занять</label>
+          <div><span style="color:#0f8544; font-size:15px; font-weight:900;">${esc(s.balance_lessons)}</span> уроків на балансі</div>
+          <div style="font-size:11px; color:#64748b;">Пройдено: ${esc(s.lessons_done)}/${esc(s.lessons_total)}</div>
+        </div>
+        <div class="student-modal-field">
+          <label>Відвідуваність</label>
+          <div>${esc(s.attendance)}</div>
+        </div>
+        <div class="student-modal-field">
+          <label>Поточна тема</label>
+          <div>${esc(s.current_topic)}</div>
+        </div>
+      </div>
+      <div class="student-modal-field" style="margin-top:12px;">
+        <label>Нотатка викладача</label>
+        <div style="font-size:12px; font-weight:600; color:#475569; font-style:italic;">"${esc(s.notes)}"</div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="btn ok" style="flex:1;" onclick="alert('SMS/дзвінок батькам (${esc(s.parent_name)}): ${esc(s.parent_phone)}')">📞 Зв'язатися з батьками</button>
+        <button class="btn" style="flex:1;" onclick="closeStudentModal()">Закрити</button>
+      </div>
+    `;
+    $('student-modal').style.display = 'flex';
+  } catch(e) {
+    alert('Не вдалося отримати картку учня: ' + e.message);
+  }
+}
+
+function closeStudentModal() {
+  const m = $('student-modal');
+  if (m) m.style.display = 'none';
+}
+
+async function teacherResetDemo() {
+  try {
+    await api('/teacher-chat/reset-calendar', { method: 'POST' });
+
+    // Reset Friday slot
+    const fri = $('friday-slot');
+    if (fri) {
+      fri.className = 'cal-slot-card slot-conflict';
+      fri.innerHTML = `
+        <div class="slot-time">17:00</div>
+        <div><b>⚠️ КОНФЛІКТ</b></div>
+        <div style="font-size:10.5px;margin-top:3px;">
+          1. <span class="clickable-student" onclick="showStudentCard('Денис Коваль')">Денис Коваль</span> (10:15)<br>
+          2. <span class="clickable-student" onclick="showStudentCard('Марк Бондар')">Марк Бондар</span> (10:18)
+        </div>`;
+    }
+
+    // Reset Saturday slot
+    const sat = $('saturday-slot');
+    if (sat) {
+      sat.className = 'cal-slot-card slot-free';
+      sat.innerHTML = `
+        <div class="slot-time">11:00</div>
+        <div id="saturday-slot-content"><i>Вільний</i></div>
+        <div id="saturday-slot-note" style="color:#2563eb;font-size:11px;font-weight:700;">(AI пропонує)</div>`;
+    }
+
+    // Reset Monday slot
+    const mon = $('monday-slot');
+    if (mon) {
+      mon.className = 'cal-slot-card slot-free';
+      mon.innerHTML = `<div class="slot-time">16:00</div><div><i>Вільний</i></div>`;
+    }
+
+    // Reset Tuesday stale slot
+    const tue = $('tuesday-slot');
+    if (tue) {
+      tue.className = 'cal-slot-card';
+      tue.style.background = '#fff8ed';
+      tue.style.borderColor = 'var(--amber)';
+      tue.innerHTML = `
+        <div class="slot-time" style="color:var(--amber);">16:00</div>
+        <div><b style="color:var(--amber);" class="clickable-student" onclick="showStudentCard('Артем Литвин')">🕐 Артем Литвин</b></div>
+        <div style="font-size:10.5px;margin-top:3px;color:#78350f;">Курс завершено 7 дн. тому<br>Запис застарілий</div>`;
+    }
+
+    // Reset tags
+    $('cal-status-tag').textContent = '⚠️ Виявлено конфлікт';
+    $('cal-status-tag').style.background = 'var(--amber-soft)';
+    $('cal-status-tag').style.color = 'var(--amber)';
+
+    $('stale-status-tag').textContent = '🕐 Застарілий запис';
+    $('stale-status-tag').style.background = 'var(--amber-soft)';
+    $('stale-status-tag').style.color = 'var(--amber)';
+
+    // Reset panels
+    $('analysis-conflict-panel').style.display = 'none';
+    $('context-conflict-panel').style.display = 'none';
+    $('conflict-actions-container').style.display = 'none';
+    $('conflict-guardrails').style.display = 'none';
+
+    $('analysis-stale-panel').style.display = 'none';
+    $('context-stale-panel').style.display = 'none';
+    $('stale-actions-container').style.display = 'none';
+    $('stale-guardrails').style.display = 'none';
+
+    // Clear chat
+    $('teacher-chat').innerHTML = `
+      <div class="bubble b-ai">
+        <b>AI Support Agent:</b><br>
+        Добрий день, Олено Іванівно! 👋 Розклад скинуто до початкового стану демо.<br><br>
+        Оберіть сценарій або напишіть своє запитання — я допоможу!
+      </div>`;
+  } catch(e) {
+    alert('Помилка скидання: ' + e.message);
+  }
+}
+
+// Legacy function kept for compatibility
+async function teacherResolveConflict() {
+  teacherSubmitCustomConflict();
 }
 
 /* PARENT WORKSPACE */
@@ -989,7 +1805,12 @@ async function loadAdminQueue() {
 async function adminApprove(id) {
   await api('/admin/escalations/' + id + '/resolve', { method: 'POST' });
   await loadAdminQueue();
-  alert('Тікет ' + id + ' успішно затверджено адміністратором! Баланс поповнено.');
+  if (id === 'ESC-102') {
+    await teacherSyncStaleStatus();
+    alert('Тікет ESC-102 успішно затверджено адміністратором! Слот у розкладі викладача звільнено.');
+  } else {
+    alert('Тікет ' + id + ' успішно затверджено адміністратором! Баланс поповнено.');
+  }
 }
 
 async function resetDemo() {
@@ -998,5 +1819,13 @@ async function resetDemo() {
   location.reload();
 }
 </script>
+<!-- Student Profile Modal for Teacher -->
+<div id="student-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeStudentModal()">
+  <div class="login-card" style="max-width:520px; padding:24px; position:relative;">
+    <button onclick="closeStudentModal()" style="position:absolute; top:16px; right:16px; border:none; background:none; font-size:22px; cursor:pointer; font-weight:900; color:var(--ink);">✕</button>
+    <div id="student-modal-content"></div>
+  </div>
+</div>
+
 </body>
 </html>

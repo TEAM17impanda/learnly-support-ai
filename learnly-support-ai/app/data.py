@@ -176,6 +176,54 @@ INITIAL_CALENDAR = {
     "alternatives": ["Субота 11:00", "Субота 14:00", "Понеділок 16:00"],
     "resolved": False,
     "final_resolution": None,
+    "resolution_details": None,
+    "stale_resolved": False,
+    "stale_escalated": False,
+}
+
+TEACHER_STUDENTS = {
+    "Денис Коваль": {
+        "name": "Денис Коваль",
+        "grade": "2 клас",
+        "course": "Math Kids (Індивідуальний)",
+        "parent_name": "Ірина Коваль (мама)",
+        "parent_phone": "+380 50 123-45-67",
+        "parent_email": "irina.koval@example.com",
+        "lessons_done": 8,
+        "lessons_total": 24,
+        "balance_lessons": 16,
+        "attendance": "100% (8 з 8)",
+        "current_topic": "Таблиця множення на 4-5",
+        "notes": "Уважний, активний. Батьки просять заняття в другій половині дня.",
+    },
+    "Марк Бондар": {
+        "name": "Марк Бондар",
+        "grade": "2 клас",
+        "course": "Math Kids (Індивідуальний)",
+        "parent_name": "Сергій Бондар (тато)",
+        "parent_phone": "+380 67 987-65-43",
+        "parent_email": "s.bondar@example.com",
+        "lessons_done": 12,
+        "lessons_total": 24,
+        "balance_lessons": 12,
+        "attendance": "92% (11 з 12)",
+        "current_topic": "Геометричні фігури та периметр",
+        "notes": "Швидко рахує усно. Підходять ранкові слоти на вихідних.",
+    },
+    "Артем Литвин": {
+        "name": "Артем Литвин",
+        "grade": "3 клас",
+        "course": "Індивідуальний курс Math (3 клас)",
+        "parent_name": "Наталія Литвин (мама)",
+        "parent_phone": "+380 93 456-78-90",
+        "parent_email": "n.lytvyn@example.com",
+        "lessons_done": 24,
+        "lessons_total": 24,
+        "balance_lessons": 0,
+        "attendance": "100% (24 з 24)",
+        "current_topic": "Курс завершено (Сертифікат видано)",
+        "notes": "Успішно завершив курс. Очікується рішення батьків щодо переходу на наступний рівень.",
+    },
 }
 
 INITIAL_ESCALATIONS = [
@@ -204,4 +252,3 @@ INITIAL_ESCALATIONS = [
         "created_at": "11:40",
     },
 ]
-

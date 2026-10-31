@@ -1,4 +1,5 @@
 """REST API + роздача фронтенду."""
+import copy
 import os
 from pathlib import Path
 
@@ -10,9 +11,9 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
-from . import agent, tools  # noqa: E402
+from . import agent, teacher_agent, tools  # noqa: E402
 from .context import build_context  # noqa: E402
-from .data import COURSES, DEMO_MESSAGES, HISTORY  # noqa: E402
+from .data import COURSES, DEMO_MESSAGES, HISTORY, INITIAL_CALENDAR, TEACHER_STUDENTS  # noqa: E402
 from .quality import score_reply  # noqa: E402
 from .store import STATE, now  # noqa: E402
 
@@ -309,9 +310,19 @@ class RoleChatMessage(BaseModel):
     message: str
 
 
+class TeacherChatMessage(BaseModel):
+    message: str
+    scenario_id: str | None = None
+
+
 class ResolveBooking(BaseModel):
     chosen_slot: str = "Субота 11:00"
     student_to_move: str = "Марк Бондар"
+    student_to_keep: str | None = None
+
+
+class EscalateStale(BaseModel):
+    confirm: bool = True
 
 
 @app.get("/api/roles-data")
@@ -324,6 +335,112 @@ def roles_data():
     }
 
 
+@app.get("/api/teacher/students/{name}")
+def teacher_student_card(name: str):
+    """Детальна картка учня для викладача (контакти батьків, баланс, прогрес)."""
+    s = TEACHER_STUDENTS.get(name)
+    if not s:
+        raise HTTPException(404, "Учня не знайдено")
+    return s
+
+
+@app.get("/api/teacher-chat/calendar")
+def get_teacher_calendar():
+    """Поточний стан календаря викладача та пов'язаного тікета."""
+    return {
+        "calendar": STATE.calendar,
+        "escalation_102": next((e for e in STATE.escalations if e["id"] == "ESC-102"), None)
+    }
+
+
+@app.post("/api/teacher-chat/reset-calendar")
+def reset_teacher_calendar():
+    """Скидання стану розкладу вчителя до демо-конфлікту без впливу на інші ролі."""
+    STATE.calendar = copy.deepcopy(INITIAL_CALENDAR)
+    esc = next((e for e in STATE.escalations if e["id"] == "ESC-102"), None)
+    if esc:
+        esc["status"] = "pending"
+        esc.pop("resolution_note", None)
+    STATE.log("teacher_calendar_reset")
+    return {"ok": True, "calendar": STATE.calendar}
+
+
+@app.post("/api/teacher-chat")
+def teacher_chat(body: TeacherChatMessage):
+    """Teacher-агент: аналізує повідомлення викладача та повертає структурований результат."""
+    msg = body.message.strip()
+    result = teacher_agent.analyze_teacher_message(msg, STATE.calendar)
+    return {"role": "teacher", **result}
+
+
+@app.post("/api/teacher-chat/resolve-booking")
+def teacher_resolve_booking(body: ResolveBooking):
+    """Підтвердження викладачем рішення конфлікту бронювання з динамічним вибором."""
+    slot = STATE.calendar.get("conflicted_slot", "П'ятниця 17:00")
+    students = [s["name"] for s in STATE.calendar.get("students", [])]
+    to_move = body.student_to_move
+    to_keep = body.student_to_keep or next((s for s in students if s != to_move), "Перший учень")
+
+    STATE.calendar["resolved"] = True
+    STATE.calendar["final_resolution"] = (
+        f"{to_keep} залишився на {slot}. "
+        f"{to_move} перенесено на {body.chosen_slot}. "
+        f"Обом родинам надіслано SMS-підтвердження."
+    )
+    STATE.calendar["resolution_details"] = {
+        "student_kept": to_keep,
+        "student_moved": to_move,
+        "original_slot": slot,
+        "chosen_slot": body.chosen_slot,
+    }
+    STATE.log("teacher_conflict_resolved", slot=body.chosen_slot, student=to_move, kept=to_keep)
+    return {
+        "ok": True,
+        "calendar": STATE.calendar,
+        "message": STATE.calendar["final_resolution"],
+        "actions_taken": [
+            f"Слот {slot} закріплено за {to_keep}",
+            f"{to_move} перенесено на {body.chosen_slot}",
+            f"SMS-сповіщення надіслано родинам учнів {to_keep} та {to_move}",
+            "Аудит-запис збережено в системі",
+        ]
+    }
+
+
+@app.post("/api/teacher-chat/escalate-stale")
+def teacher_escalate_stale(body: EscalateStale):
+    """Підтвердження викладачем ескалації застарілого запису."""
+    STATE.calendar["stale_escalated"] = True
+    esc = next((e for e in STATE.escalations if e["id"] == "ESC-102"), None)
+    if not esc:
+        esc_id = "ESC-102"
+        new_esc = {
+            "id": esc_id,
+            "user_name": "Олена Іванівна",
+            "user_role": "Викладач",
+            "problem": "Застарілий запис учня Артема Литвина після завершення курсу",
+            "verified_context": "Курс завершено 7 днів тому (100% уроків пройдено). Запис у календарі активний.",
+            "checked_by_ai": "Статус проходження курсу, сертифікацію, помилку вебхук-синхронізації",
+            "escalation_reason": "Потрібна синхронізація з навчальним відділом щодо наступного модуля",
+            "priority": "P2",
+            "status": "pending",
+            "created_at": now(),
+        }
+        STATE.escalations.append(new_esc)
+        esc = new_esc
+        STATE.log("teacher_stale_escalated", esc_id=esc_id)
+    else:
+        esc["status"] = "pending"
+        STATE.log("teacher_stale_escalated_existing", esc_id="ESC-102")
+
+    return {
+        "ok": True,
+        "escalation": esc,
+        "calendar": STATE.calendar,
+        "message": "Тікет ESC-102 передано до черги адміністратора для координації з навчальним відділом.",
+    }
+
+
 @app.post("/api/role-chat")
 def role_chat(body: RoleChatMessage):
     role = body.role
@@ -331,50 +448,8 @@ def role_chat(body: RoleChatMessage):
     msg_l = msg.lower()
 
     if role == "teacher":
-        if any(w in msg_l for w in ["подвійн", "два учні", "конфлікт", "17:00"]):
-            STATE.log("conflict_detected", role="teacher", slot="П'ятниця 17:00")
-            return {
-                "role": role,
-                "intent": "double_booking_conflict",
-                "intent_title": "Подвійне бронювання одного слота",
-                "verified_context": {
-                    "slot": "П'ятниця 17:00",
-                    "student_1": {"name": "Денис Коваль", "time": "10:15", "priority": "перше бронювання"},
-                    "student_2": {"name": "Марк Бондар", "time": "10:18", "priority": "конфліктний дубль"},
-                    "alternatives": STATE.calendar["alternatives"],
-                    "resolved": STATE.calendar["resolved"],
-                },
-                "checked_by_ai": "Календар викладача, чергу транзакцій бронювань, вільні слоти на тиждень",
-                "decision_type": "can_resolve_with_approval",
-                "proposed_action": {
-                    "id": "ACT-DBL-1",
-                    "title": "Усунути конфлікт розкладу",
-                    "description": "Залишити Дениса Коваля на Пт 17:00. Запропонувати батькам Марка Бондаря альтернативний слот Субота 11:00 зі збереженням викладача.",
-                    "requires_approval": True,
-                },
-                "ai_reply": "Виявила накладку в календарі: слот П'ятниця 17:00 забронювали Денис Коваль (10:15) та Марк Бондар (10:18). "
-                            "Згідно з правилом черги, рекомендую зберегти слот за Денисом, а Марку запропонувати найближчий вільний час — Субота 11:00. "
-                            "Натисніть «Підтвердити», щоб я оновила бронювання та надіслала сповіщення обом родинам.",
-            }
-        else:
-            STATE.log("stale_record_checked", role="teacher")
-            return {
-                "role": role,
-                "intent": "stale_calendar_record",
-                "intent_title": "Застарілий запис після завершення курсу",
-                "verified_context": {
-                    "student": "Артем Литвин",
-                    "course_status": "Завершено 100% уроків",
-                    "calendar_slot": "Вівторок 16:00 (активний)",
-                },
-                "checked_by_ai": "Статус проходження курсу, дата фінального уроку, наявність сертифіката",
-                "decision_type": "escalate",
-                "escalation_reason": "Потрібна синхронізація з навчальним відділом: чи планується продовження навчання",
-                "priority": "P2",
-                "ai_reply": "Перевірила статус Артема Литвина: курс дійсно завершено минулого четверга. "
-                            "Слот у вівторок 16:00 не звільнився автоматично через очікування рішення батьків щодо продовження. "
-                            "Я сформувала тікет адміністратору (ESC-102) для безпечного звільнення слота.",
-            }
+        result = teacher_agent.analyze_teacher_message(msg, STATE.calendar)
+        return {"role": role, **result}
 
     elif role == "student":
         if any(w in msg_l for w in ["увійт", "вхід", "код", "парол", "телефон"]):
@@ -486,14 +561,7 @@ def role_chat(body: RoleChatMessage):
 
 @app.post("/api/role-chat/resolve-booking")
 def resolve_booking(body: ResolveBooking):
-    STATE.calendar["resolved"] = True
-    STATE.calendar["final_resolution"] = f"Денис Коваль залишився на Пт 17:00. {body.student_to_move} перенесено на {body.chosen_slot}. Обом родинам надіслано SMS-підтвердження."
-    STATE.log("conflict_resolved", slot=body.chosen_slot, student=body.student_to_move)
-    return {
-        "ok": True,
-        "calendar": STATE.calendar,
-        "message": STATE.calendar["final_resolution"]
-    }
+    return teacher_resolve_booking(body)
 
 
 @app.get("/api/admin/escalations")
@@ -508,6 +576,10 @@ def resolve_escalation(esc_id: str):
         raise HTTPException(404, "Тікет не знайдено")
     esc["status"] = "resolved"
     esc["resolution_note"] = "Вирішено адміністратором: транзакцію підтверджено, заняття зараховано на баланс."
+    if esc_id == "ESC-102" or esc.get("user_role") == "Викладач":
+        esc["resolution_note"] = "Вирішено адміністратором: навчальний відділ погодив звільнення слота. Слот Вівторок 16:00 звільнено."
+        STATE.calendar["stale_resolved"] = True
+        STATE.calendar["stale_resolution_note"] = esc["resolution_note"]
     STATE.log("escalation_resolved", esc_id=esc_id)
     return esc
 
