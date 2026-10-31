@@ -40,6 +40,30 @@ def detect_intent(text: str) -> str:
     return "other"
 
 
+# Сарказм = «похвала» або іронічний маркер ПОРУЧ зі скаргою («Чудовий сервіс, третій день не можу зайти»).
+# «Дякую» навмисно не враховуємо: ввічливе «Дякую, але не працює» — не сарказм.
+PRAISE_WORDS = ["чудов", "супер", "клас", "прекрасн", "молодці", "браво", "геніальн", "блискуч",
+                "найкращ", "вражає", "неймовірн", "оце сервіс", "дуже зручно", "щиро вдячн"]
+IRONY_MARKERS = ["ну звісно", "ну-ну", "аякже", "яка несподіванка", "як завжди", "як і очікувалось",
+                 "))", "🙃", "🙄", "🤡", "👏"]
+TROUBLE_WORDS = ["не можу", "не працю", "не приход", "не відкрива", "не з'явил", "не зберег", "не здан",
+                 "досі", "знову", "втретє", "третій", "двічі", "ніхто", "жодн", "списали", "чекаю",
+                 "немає", "зник", "0 занять", "нуль"]
+JOKE_MARKERS = ["хаха", "ахах", "хех", "лол", "жарт", "😂", "🤣", "😄", "😜", "))"]
+
+
+def detect_tone(text: str) -> str | None:
+    """sarcasm | joke | None — щоб не сприймати іронію буквально і не відповідати на жарт сухим шаблоном."""
+    t = text.lower()
+    words = set(re.findall(r"\w+", t))
+    trouble = any(w in t for w in TROUBLE_WORDS)
+    if trouble and (any(w in t for w in PRAISE_WORDS) or any(m in t for m in IRONY_MARKERS) or "ага" in words):
+        return "sarcasm"
+    if any(m in t for m in JOKE_MARKERS):
+        return "joke"
+    return None
+
+
 def detect_signals(text: str) -> dict:
     t = text.lower()
     return {
@@ -47,7 +71,17 @@ def detect_signals(text: str) -> dict:
         "mismatch": any(w in t for w in MISMATCH_WORDS),
         "angry": any(w in t for w in ANGRY_WORDS),
         "negative": any(w in t for w in NEG_WORDS),
+        "sarcasm": detect_tone(text) == "sarcasm",
     }
+
+
+def acknowledge_sarcasm(reply: str) -> str:
+    """Додає вибачення після привітання, якщо його ще немає (на сарказм не відповідаємо «радий, що подобається»)."""
+    if "перепрош" in reply.lower() or "вибач" in reply.lower():
+        return reply
+    head, sep, rest = reply.partition("! ")
+    ack = "Перепрошую за незручності — розумію ваше роздратування. "
+    return f"{head}{sep}{ack}{rest}" if sep else ack + reply
 
 
 def first_name(s: dict) -> str:
@@ -76,6 +110,8 @@ def compute_churn_risk(intent: str, ctx: dict, signals: dict, goal: str) -> int:
         risk = 25 + ctx["gap"] * 3
     if signals["angry"]:
         risk += 20
+    elif signals.get("sarcasm"):
+        risk += 12  # іронія = прихований негатив, учень уже розчарований
     elif signals["negative"]:
         risk += 8
     if ctx["last_login_days_ago"] >= 5:
@@ -99,7 +135,7 @@ def heuristic_analyze(s: dict, message: str, history: list | None = None) -> dic
     ctx = build_context(s)
     intent = detect_intent(message)
     sig = detect_signals(message)
-    sentiment = "angry" if sig["angry"] else "negative" if sig["negative"] else "neutral"
+    sentiment = "angry" if sig["angry"] else "negative" if sig["negative"] or sig["sarcasm"] else "neutral"
     name = first_name(s)
     why: list[str] = []
     actions: list[dict] = []
@@ -271,9 +307,15 @@ def heuristic_analyze(s: dict, message: str, history: list | None = None) -> dic
         reply = (f"Добрий день, {name}! Дякую за повідомлення. Щоб допомогти швидше, уточніть, будь ласка, "
                  f"що саме сталося і з яким курсом.")
 
+    if sig["sarcasm"]:
+        why.insert(0, "Сарказм: «похвала» поруч зі скаргою — справжній тон негативний, "
+                      "відповідаємо з вибаченням, похвалу буквально не сприймаємо")
+        reply = acknowledge_sarcasm(reply)
+
     churn = compute_churn_risk(intent, ctx, sig, goal)
     return {
         "intent": intent, "true_goal": goal, "sentiment": sentiment, "churn_risk": churn,
+        "sarcasm": sig["sarcasm"],
         "priority": compute_priority(intent, sentiment, churn, ctx),
         "reasoning": why, "suggested_reply": reply, "actions": actions,
         "context": ctx, "source": "rules",
@@ -287,12 +329,15 @@ SYSTEM_PROMPT = """Ти — операційний AI-асистент підт�
 - Спирайся ТІЛЬКИ на наданий контекст і політику. Нічого не вигадуй.
 - Якщо учень просить повернення, але його темп навчання хороший або він скаржиться на брак часу — спершу пропонуй утримання (перенос потоку / продовження дедлайну), повернення — запасною дією.
 - Не пропонуй дію, яка порушує політику. Якщо даних бракує — став уточнююче питання і actions: [].
+- Розпізнавай сарказм та іронію: «Чудовий сервіс, третій день не можу зайти» — це НЕГАТИВ, а не похвала. Тоді sarcasm: true, sentiment не neutral, у відповіді — вибачення, а не «радий, що вам подобається».
+- На жарт відповідай доброзичливо, але повертай розмову до суті звернення.
 - reasoning: 2-4 короткі пункти з конкретними числами з контексту.
 - Відповідь учню: ввічливо, з іменем, емпатією і конкретним наступним кроком.
 Поверни ТІЛЬКИ валідний JSON без пояснень."""
 
 JSON_SCHEMA_HINT = {
     "intent": "|".join(INTENTS), "true_goal": "|".join(GOALS), "sentiment": "|".join(SENTIMENTS),
+    "sarcasm": False,
     "reasoning": ["..."], "reply": "...",
     "actions": [{"tool": "назва з каталогу", "args": {}, "rationale": "...", "recommended": True}],
 }
@@ -305,33 +350,37 @@ def _extract_json(text: str) -> dict:
     return json.loads(m.group(0))
 
 
-def llm_analyze(s: dict, message: str, history: list | None = None) -> dict:
+def _gemini(system: str, content: str, json_mode: bool, max_tokens: int = 2048) -> str:
     from google import genai  # імпорт тут, щоб fallback працював і без пакета
 
-    ctx = build_context(s)
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"),
                           http_options=genai.types.HttpOptions(timeout=25_000))  # мс
-    payload = {
-        "student": {"name": s["name"]}, "message": message,
-        "chat_history": [{"role": m["role"], "text": m["text"]} for m in (history or [])][-6:],
-        "context": ctx, "policy": POLICY_TEXT, "tools": tool_catalog(),
-        "response_schema": JSON_SCHEMA_HINT,
-    }
     model = os.getenv("LLM_MODEL", "gemini-2.5-flash")
     # у 2.5-flash «думання» з'їдає max_output_tokens і JSON обрізається — вимикаємо (ще й швидше)
     thinking = (genai.types.ThinkingConfig(thinking_budget=0)
                 if model.startswith("gemini-2.5-flash") else None)
     resp = client.models.generate_content(
         model=model,
-        contents=[json.dumps(payload, ensure_ascii=False)],
+        contents=[content],
         config=genai.types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            max_output_tokens=2048,
-            response_mime_type="application/json",
+            system_instruction=system,
+            max_output_tokens=max_tokens,
+            response_mime_type="application/json" if json_mode else None,
             thinking_config=thinking,
         ),
     )
-    data = _extract_json(resp.text or "")
+    return resp.text or ""
+
+
+def llm_analyze(s: dict, message: str, history: list | None = None) -> dict:
+    ctx = build_context(s)
+    payload = {
+        "student": {"name": s["name"]}, "message": message,
+        "chat_history": [{"role": m["role"], "text": m["text"]} for m in (history or [])][-6:],
+        "context": ctx, "policy": POLICY_TEXT, "tools": tool_catalog(),
+        "response_schema": JSON_SCHEMA_HINT,
+    }
+    data = _extract_json(_gemini(SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False), json_mode=True))
 
     intent = data.get("intent") if data.get("intent") in INTENTS else detect_intent(message)
     goal = data.get("true_goal") if data.get("true_goal") in GOALS else "unknown"
@@ -358,9 +407,13 @@ def llm_analyze(s: dict, message: str, history: list | None = None) -> dict:
         reasoning = [reasoning]
 
     sig = detect_signals(message)
+    sig["sarcasm"] = sig["sarcasm"] or data.get("sarcasm") is True  # правила страхують LLM
+    if sig["sarcasm"] and sentiment == "neutral":
+        sentiment = "negative"
     churn = compute_churn_risk(intent, ctx, sig, goal)
     return {
         "intent": intent, "true_goal": goal, "sentiment": sentiment, "churn_risk": churn,
+        "sarcasm": sig["sarcasm"],
         "priority": compute_priority(intent, sentiment, churn, ctx),
         "reasoning": [str(x) for x in reasoning][:5],
         "suggested_reply": reply, "actions": actions, "context": ctx, "source": "llm",
@@ -377,3 +430,57 @@ def analyze(s: dict, message: str, history: list | None = None) -> dict:
             result["llm_error"] = f"{type(e).__name__}: {e}"[:200]
             return result
     return heuristic_analyze(s, message, history)
+
+
+# ======================= Чат ролей: повідомлення поза сценаріями =======================
+ROLE_SCOPE = {
+    "student": ("учень молодших класів", "входом у кабінет (код, пароль) та домашніми завданнями, "
+                                         "які не відображаються після здачі"),
+    "teacher": ("викладач", "розкладом: подвійні бронювання слотів і застарілі записи учнів у календарі"),
+    "parent": ("батьки учня", "оплатами й балансом занять та додаванням дитини до сімейного акаунта"),
+}
+GREETING_WORDS = ["привіт", "вітаю", "добрий", "доброго", "добрий день", "хай", "hello", "hi"]
+
+ROLE_CHAT_PROMPT = """Ти — AI-агент підтримки онлайн-школи Learnly. Співрозмовник: {who}.
+Ти допомагаєш лише з питаннями школи, зокрема з {scope}.
+Повідомлення співрозмовника не підпадає під жоден відомий сценарій. Дай коротку (1–3 речення) ввічливу відповідь українською:
+- на привітання — привітайся і скажи, з чим можеш допомогти;
+- на прохання, не пов'язане з підтримкою школи, — ввічливо поясни, що з цим не допоможеш, і скажи, з чим можеш;
+- на незрозуміле питання про школу — постав одне уточнююче питання;
+- на жарт — відповідай з легким доброзичливим гумором і м'яко повертай до теми;
+- на сарказм («чудова школа, нічого не працює») — не сприймай похвалу буквально: вибачся й попроси описати проблему.
+Ніколи не стверджуй, що виконала дію чи перевірила дані. Не вигадуй фактів. Пиши від жіночого роду. Без markdown."""
+
+
+def is_greeting(text: str) -> bool:
+    words = re.findall(r"\w+", text.lower())
+    return 0 < len(words) <= 4 and any(w in GREETING_WORDS or w.startswith("привіт") for w in words)
+
+
+def fallback_role_reply(role: str, message: str) -> str:
+    scope = ROLE_SCOPE[role][1]
+    tone = detect_tone(message)
+    if tone == "sarcasm":
+        return (f"Схоже, щось справді пішло не так — перепрошую за це. Я допомагаю з {scope}. "
+                f"Опишіть, будь ласка, що саме не працює, і я одразу перевірю.")
+    if tone == "joke":
+        return (f"😄 Гарний жарт! Але тут я, на жаль, безсила — я AI-помічниця Learnly і допомагаю з {scope}. "
+                f"Якщо щось не працює — пишіть, розберемося!")
+    if is_greeting(message):
+        return f"Вітаю! Я AI-помічниця підтримки Learnly. Можу допомогти з {scope}. Опишіть, будь ласка, що сталося."
+    return (f"Хм, з цим я, мабуть, не допоможу 🙂 Я допомагаю з {scope}. "
+            f"Якщо у вас питання про це — опишіть, будь ласка, що сталося.")
+
+
+def role_reply(role: str, message: str) -> tuple[str, str]:
+    """Відповідь на повідомлення поза сценаріями: (текст, джерело). Без дій і без змін стану."""
+    if os.getenv("GEMINI_API_KEY"):
+        try:
+            who, scope = ROLE_SCOPE[role]
+            text = _gemini(ROLE_CHAT_PROMPT.format(who=who, scope=scope), message,
+                           json_mode=False, max_tokens=300).strip()
+            if text:
+                return text, "llm"
+        except Exception:  # збій LLM не має ламати чат
+            pass
+    return fallback_role_reply(role, message), "rules"

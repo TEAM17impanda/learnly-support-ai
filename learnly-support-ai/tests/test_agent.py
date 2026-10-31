@@ -146,3 +146,27 @@ def test_llm_clarifying_answer_without_actions_is_accepted(students, monkeypatch
     r = agent.llm_analyze(students["s1"], "Привіт")
     assert r["source"] == "llm" and r["actions"] == []
     assert r["reasoning"] == ["Недостатньо даних"]
+
+
+@pytest.mark.parametrize("text,tone", [
+    ("Чудовий сервіс, третій день не можу зайти в кабінет", "sarcasm"),
+    ("Ну звісно, гроші списали двічі, як завжди", "sarcasm"),
+    ("Ага, супер, баланс досі 0 занять 👏", "sarcasm"),
+    ("Помий підлогу хаха 😂", "joke"),
+    ("Дякую, але не можу зайти в кабінет", None),      # ввічливість ≠ сарказм
+    ("Курс чудовий, дуже подобається", None),          # щира похвала без скарги
+    ("Хочу повернути гроші за курс", None),
+])
+def test_detect_tone(text, tone):
+    assert agent.detect_tone(text) == tone
+
+
+def test_sarcastic_complaint_is_treated_as_negative(students):
+    sincere = agent.heuristic_analyze(students["s2"], "Не можу зайти в курс")
+    sarcastic = agent.heuristic_analyze(students["s2"], "Чудово, просто супер — третій день не можу зайти в курс")
+    assert sarcastic["sarcasm"] is True and sincere["sarcasm"] is False
+    assert sarcastic["sentiment"] == "negative"
+    assert sarcastic["churn_risk"] > sincere["churn_risk"]
+    assert sarcastic["reasoning"][0].startswith("Сарказм")
+    assert "Перепрошую" in sarcastic["suggested_reply"]
+    assert tools_of(sarcastic) == tools_of(sincere)      # тон не змінює правильну дію

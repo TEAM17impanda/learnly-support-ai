@@ -1671,6 +1671,125 @@
     border-color: #34385f;
     box-shadow: 3px 3px 0 #20233f;
   }
+  /* =========== ADMIN WORKSPACE =========== */
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .admin-stat {
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: var(--shadow-solid-sm);
+    padding: 14px 16px;
+  }
+  .admin-stat .val { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 900; }
+  .admin-stat .lbl { font-size: 12px; color: #64748b; font-weight: 700; }
+  .admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 440px;
+    gap: 20px;
+    align-items: start;
+  }
+  .admin-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+  .preset-chip.active { background: var(--ink); color: #ffffff; }
+  .admin-select {
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #fdfbf7;
+  }
+  .escalation-table tbody tr { cursor: pointer; }
+  .escalation-table tbody tr:hover td { background: var(--brand-soft); }
+  .escalation-table tbody tr.selected td { background: #e8ecf7; }
+  .st-pending { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+  .st-in_progress { background: var(--brand-soft); color: var(--brand-accent); border-color: var(--brand-accent); }
+  .st-resolved { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+  .admin-detail-body { padding: 16px 18px; font-size: 13px; line-height: 1.5; }
+  .admin-muted { color: #64748b; }
+  .admin-field { margin-bottom: 12px; }
+  .admin-field .k {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+  .admin-quote {
+    background: #fdfbf7;
+    border-left: 4px solid var(--ink);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-style: italic;
+  }
+  .admin-detail-body textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    border: 1.5px solid var(--ink);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font: inherit;
+    resize: vertical;
+  }
+  .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .admin-timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid #cbd5e1; }
+  .admin-timeline li { position: relative; padding: 0 0 8px 14px; font-size: 12px; }
+  .admin-timeline li::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .audit-list { max-height: 260px; overflow-y: auto; padding: 8px 18px 14px; font-size: 12px; }
+  .audit-row { display: flex; gap: 12px; padding: 5px 0; border-bottom: 1px dashed #e2e8f0; }
+  .audit-row .ts { color: #64748b; font-variant-numeric: tabular-nums; min-width: 64px; }
+  .audit-row .ev { font-weight: 800; min-width: 170px; }
+  @media (max-width: 960px) {
+    .admin-grid { grid-template-columns: 1fr; }
+    .admin-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  /* =========== ADMIN: COPILOT + ANALYTICS =========== */
+  .admin-tabs { margin-bottom: 18px; }
+  .copilot-new { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; border-bottom: 2px solid #e2e8f0; }
+  .copilot-new textarea, .copilot-analysis textarea {
+    width: 100%; box-sizing: border-box; border: 1.5px solid var(--ink); border-radius: 10px;
+    padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical;
+  }
+  .copilot-list { max-height: 560px; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .copilot-item { border: 1.5px solid var(--ink); border-radius: 12px; padding: 9px 11px; cursor: pointer; background: #fff; }
+  .copilot-item:hover { background: var(--brand-soft); }
+  .copilot-item.selected { background: #e8ecf7; box-shadow: var(--shadow-solid-sm); }
+  .copilot-item.done { opacity: 0.65; }
+  .copilot-thread { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; max-height: 220px; overflow-y: auto; }
+  .copilot-msg { border-radius: 10px; padding: 7px 10px; font-size: 12.5px; border: 1px solid #e2e8f0; }
+  .msg-student { background: #fff; }
+  .msg-agent { background: var(--brand-soft); }
+  .msg-system { background: #f8fafc; color: #475569; font-size: 12px; }
+  .copilot-analysis { background: #fdfbf7; border: 1.5px dashed var(--ink); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+  .copilot-action { border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; }
+  .copilot-action.rec { border-color: var(--ink); box-shadow: var(--shadow-solid-sm); }
+  #copilot-reply { min-height: 110px; }
+  .intent-row { display: grid; grid-template-columns: 150px 1fr 32px; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
+  .intent-track { height: 10px; background: #eef1f6; border-radius: 4px; }
+  .intent-bar { display: block; height: 100%; background: var(--brand-accent); border-radius: 0 4px 4px 0; min-width: 4px; }
+  .intent-val { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -1679,7 +1798,6 @@
 <header class="site-header">
   <div class="top-meta-bar">
     <div class="figma-tag">
-      <span class="figma-name">Khrystyna</span>
       <span class="figma-box">Hanover and Tyke</span>
     </div>
 
@@ -2073,28 +2191,94 @@
   </div>
 </main>
 
-<!-- 4. ADMIN WORKSPACE (ESCALATION QUEUE TABLE) -->
+<!-- 4. ADMIN WORKSPACE (ESCALATION QUEUE) -->
 <main id="ws-admin" class="workspace-container" style="display:none;">
-  <div class="panel-box">
+  <div class="preset-row admin-tabs">
+    <button class="preset-chip active" id="admin-tabbtn-esc" onclick="showAdminTab('esc')">🛡️ Ескалації</button>
+    <button class="preset-chip" id="admin-tabbtn-copilot" onclick="showAdminTab('copilot')">🤖 AI-копілот звернень</button>
+    <button class="preset-chip" id="admin-tabbtn-analytics" onclick="showAdminTab('analytics')">📊 Ефективність підтримки</button>
+  </div>
+  <div id="admin-tab-esc">
+  <div class="admin-stats" id="admin-stats"></div>
+
+  <div class="admin-grid">
+    <div class="panel-box">
+      <div class="panel-header">
+        <h2>🛡️ Черга ескальованих звернень</h2>
+        <span class="badge-tag" id="esc-counter" style="background:var(--red-soft); color:var(--red);">—</span>
+      </div>
+      <div class="admin-filters">
+        <div class="preset-row" id="admin-status-filter" style="margin:0;">
+          <button class="preset-chip active" data-status="">Усі</button>
+          <button class="preset-chip" data-status="pending">🆕 Нові</button>
+          <button class="preset-chip" data-status="in_progress">🔧 В роботі</button>
+          <button class="preset-chip" data-status="resolved">✅ Вирішені</button>
+        </div>
+        <select id="admin-priority-filter" class="admin-select">
+          <option value="">Усі пріоритети</option>
+          <option value="P1">P1 — терміново</option>
+          <option value="P2">P2 — звичайний</option>
+        </select>
+      </div>
+      <div style="padding:0 16px 16px; overflow-x:auto;">
+        <table class="escalation-table">
+          <thead>
+            <tr>
+              <th style="width:80px;">Тікет</th>
+              <th style="width:150px;">Користувач і роль</th>
+              <th>Опис проблеми</th>
+              <th style="width:90px;">Пріоритет</th>
+              <th style="width:120px;">Статус</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel-box" id="admin-detail">
+      <div class="panel-header"><h2>📋 Деталі тікета</h2></div>
+      <div class="admin-detail-body" id="admin-detail-body">
+        <p class="admin-muted">Оберіть тікет у черзі, щоб побачити контекст, перевірки AI та прийняти рішення.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-box" style="margin-top:20px;">
     <div class="panel-header">
-      <h2>🛡️ Черга ескальованих звернень (Admin Queue)</h2>
-      <span class="badge-tag" id="esc-counter" style="background:var(--red-soft); color:var(--red);">2 відкриті тікети</span>
+      <h2>🧾 Журнал аудиту</h2>
+      <button class="preset-chip" onclick="loadAuditLog()">↻ Оновити</button>
     </div>
-    <div style="padding:16px;">
-      <table class="escalation-table">
-        <thead>
-          <tr>
-            <th style="width:140px;">Користувач і роль</th>
-            <th style="width:200px;">Опис проблеми</th>
-            <th>Перевірений контекст</th>
-            <th>Що вже перевірив AI</th>
-            <th style="width:170px;">Причина ескалації</th>
-            <th style="width:120px;">Статус / Дія</th>
-          </tr>
-        </thead>
-        <tbody id="admin-tbody"></tbody>
-      </table>
+    <div class="audit-list" id="audit-list"></div>
+  </div>
+  </div>
+
+  <div id="admin-tab-copilot" style="display:none;">
+    <div class="admin-grid">
+      <div class="panel-box">
+        <div class="panel-header">
+          <h2>🤖 Звернення учнів</h2>
+          <span class="badge-tag" id="copilot-counter">—</span>
+        </div>
+        <div class="copilot-new">
+          <div class="k admin-muted" style="font-size:11px; font-weight:900; text-transform:uppercase;">Нове звернення (демо)</div>
+          <select id="copilot-student" class="admin-select" style="width:100%;"></select>
+          <textarea id="copilot-message" rows="2" maxlength="2000"></textarea>
+          <button class="btn primary" id="copilot-create-btn" onclick="copilotCreate()">🤖 Надіслати звернення</button>
+        </div>
+        <div id="copilot-list" class="copilot-list"></div>
+      </div>
+      <div class="panel-box">
+        <div class="panel-header"><h2>🧠 Аналіз і дії AI</h2></div>
+        <div class="admin-detail-body" id="copilot-detail">
+          <p class="admin-muted">Оберіть звернення: AI покаже справжню мету учня, запропонує дії (з перевіркою політики) і чернетку відповіді.</p>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div id="admin-tab-analytics" style="display:none;">
+    <div id="analytics-body"></div>
   </div>
 </main>
 
@@ -2135,6 +2319,7 @@ function loginAs(role) {
   });
 
   if (role === 'admin') loadAdminQueue();
+  else deliverAdminUpdates(role);
 }
 
 /* ============================
@@ -2752,46 +2937,368 @@ function studentSendCustom() {
 });
 
 /* ADMIN WORKSPACE */
-async function loadAdminQueue() {
-  const items = await api('/admin/escalations');
-  const openCount = items.filter(x => x.status !== 'resolved').length;
-  $('esc-counter').textContent = `${openCount} відкритих звернень`;
+const ADMIN_NAME = 'Головний Адміністратор';
+const STATUS_LABELS = { pending: '🆕 Новий', in_progress: '🔧 В роботі', resolved: '✅ Вирішено' };
+const TEAM_LABELS = { finance: 'Фінанси', tech: 'Технічна команда', admin: 'Адміністрація' };
+const EVENT_LABELS = { created: 'Створено', taken: 'Взято в роботу', resolved: 'Вирішено', delivered: 'Повідомлено користувачу', reopened: 'Відкрито повторно' };
+const RESOLUTION_TEMPLATES = {
+  finance: ['Транзакцію підтверджено, заняття зараховано на баланс.', 'Платіж повернуто на картку, очікуйте 3–5 робочих днів.'],
+  admin: ['Запит опрацьовано вручну адміністратором.', 'Профіль підключено після перевірки сімейного зв\'язку.', 'Слот звільнено після узгодження з навчальним відділом.'],
+  tech: ['Технічну проблему усунено, доступ перевірено.'],
+};
+const adminState = { status: '', priority: '', selected: null };
 
-  $('admin-tbody').innerHTML = items.map(t => `
-    <tr>
-      <td><b>${esc(t.user_name)}</b><br><span class="badge-tag" style="margin-top:4px;">${esc(t.user_role)}</span></td>
-      <td><b>${esc(t.problem)}</b></td>
-      <td style="font-size:12px; color:#334155;">${esc(t.verified_context)}</td>
-      <td style="font-size:12px; color:#555f77;">${esc(t.checked_by_ai)}</td>
-      <td>
-        <span class="badge-tag ${t.priority === 'P1' ? 'badge-p1' : 'badge-p2'}">${esc(t.priority)}</span>
-        <div style="font-size:11px; margin-top:4px; color:#64748b;">${esc(t.escalation_reason)}</div>
-      </td>
-      <td>
-        ${t.status === 'resolved' 
-          ? `<span style="color:#0f8544; font-weight:800;">✓ Затверджено</span>` 
-          : `<button class="btn ok" style="padding:4px 8px; font-size:11px;" onclick="adminApprove('${t.id}')">Затвердити</button>`
-        }
-      </td>
-    </tr>
+$('admin-status-filter').addEventListener('click', event => {
+  const chip = event.target.closest('[data-status]');
+  if (!chip) return;
+  adminState.status = chip.dataset.status;
+  document.querySelectorAll('#admin-status-filter .preset-chip')
+    .forEach(c => c.classList.toggle('active', c === chip));
+  loadAdminQueue();
+});
+$('admin-priority-filter').addEventListener('change', event => {
+  adminState.priority = event.target.value;
+  loadAdminQueue();
+});
+
+async function loadAdminStats() {
+  const st = await api('/admin/stats');
+  $('admin-stats').innerHTML = [
+    ['🆕', st.pending, 'Нові'],
+    ['🔧', st.in_progress, 'В роботі'],
+    ['✅', st.resolved, 'Вирішені'],
+    ['🚨', st.p1_open, 'Відкриті P1'],
+  ].map(([icon, val, lbl]) => `
+    <div class="admin-stat"><div class="val">${icon} ${val}</div><div class="lbl">${lbl}</div></div>
   `).join('');
+  $('esc-counter').textContent = `${st.pending + st.in_progress} відкритих звернень`;
 }
 
-async function adminApprove(id) {
+async function loadAdminQueue() {
+  const params = new URLSearchParams();
+  if (adminState.status) params.set('status', adminState.status);
+  if (adminState.priority) params.set('priority', adminState.priority);
+  let items;
   try {
-    const esc = await api('/admin/escalations/' + id + '/resolve', { method: 'POST' });
-    await loadAdminQueue();
-    if (id === 'ESC-102') {
-      await teacherSyncStaleStatus();
-      alert('Тікет ESC-102 успішно затверджено адміністратором! ' + esc.resolution_note);
-    } else {
-      alert('Тікет ' + id + ' затверджено. ' + esc.resolution_note);
+    [items] = await Promise.all([api('/admin/escalations?' + params), loadAdminStats(), loadAuditLog()]);
+  } catch (error) {
+    console.error('Admin queue load failed', error);
+    $('admin-tbody').innerHTML = '<tr><td colspan="5">Не вдалося завантажити чергу. Оновіть сторінку.</td></tr>';
+    return;
+  }
+
+  $('admin-tbody').innerHTML = items.length ? items.map(t => `
+    <tr data-id="${esc(t.id)}" class="${t.id === adminState.selected ? 'selected' : ''}">
+      <td><b>${esc(t.id)}</b><div class="admin-muted" style="font-size:11px;">${esc(t.created_at)}</div></td>
+      <td><b>${esc(t.user_name)}</b><br><span class="badge-tag" style="margin-top:4px;">${esc(t.user_role)}</span></td>
+      <td><b>${esc(t.problem)}</b><div class="admin-muted" style="font-size:11px;">${esc(t.category)} · ${esc(TEAM_LABELS[t.team] || t.team)}</div></td>
+      <td><span class="badge-tag ${t.priority === 'P1' ? 'badge-p1' : 'badge-p2'}">${esc(t.priority)}</span></td>
+      <td><span class="badge-tag st-${esc(t.status)}">${STATUS_LABELS[t.status] || esc(t.status)}</span>
+        ${t.assignee ? `<div class="admin-muted" style="font-size:11px; margin-top:4px;">${esc(t.assignee)}</div>` : ''}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" class="admin-muted">Немає тікетів за цим фільтром.</td></tr>';
+
+  if (adminState.selected) showEscalation(adminState.selected);
+}
+
+$('admin-tbody').addEventListener('click', event => {
+  const row = event.target.closest('tr[data-id]');
+  if (!row) return;
+  adminState.selected = row.dataset.id;
+  document.querySelectorAll('#admin-tbody tr').forEach(r => r.classList.toggle('selected', r === row));
+  showEscalation(row.dataset.id);
+});
+
+async function showEscalation(id) {
+  let t;
+  try {
+    t = await api('/admin/escalations/' + encodeURIComponent(id));
+  } catch (error) {
+    $('admin-detail-body').innerHTML = '<p class="admin-muted">Тікет не знайдено.</p>';
+    return;
+  }
+  const field = (k, v) => `<div class="admin-field"><div class="k">${k}</div><div>${v}</div></div>`;
+  const templates = (RESOLUTION_TEMPLATES[t.team] || RESOLUTION_TEMPLATES.admin)
+    .map(x => `<button class="preset-chip" data-template="${esc(x)}">${esc(x)}</button>`).join('');
+
+  let actions;
+  if (t.status === 'resolved') {
+    actions = field('Рішення адміністратора', `<div class="admin-quote" style="font-style:normal;">✅ ${esc(t.resolution)}</div>
+      <div class="admin-muted" style="margin-top:4px; font-size:12px;">${t.delivered ? '📨 Результат повернуто в чат користувача' : '⏳ Користувач побачить результат при наступному вході'}</div>`);
+  } else {
+    actions = `
+      <div class="admin-field"><div class="k">Рішення</div>
+        <div class="preset-row">${templates}</div>
+        <textarea id="admin-resolution" maxlength="1000" placeholder="Опишіть, що зроблено — цей текст отримає користувач"></textarea>
+      </div>
+      <div class="admin-actions">
+        ${t.status === 'pending' ? `<button class="btn primary" onclick="adminTake('${esc(t.id)}')">🔧 Взяти в роботу</button>` : ''}
+        <button class="btn ok" onclick="adminResolve('${esc(t.id)}')">✅ Вирішити та повідомити</button>
+      </div>`;
+  }
+
+  $('admin-detail-body').innerHTML = `
+    <div style="display:flex; gap:6px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+      <b style="font-family:'Outfit',sans-serif; font-size:16px;">${esc(t.id)}</b>
+      <span class="badge-tag ${t.priority === 'P1' ? 'badge-p1' : 'badge-p2'}">${esc(t.priority)}</span>
+      <span class="badge-tag st-${esc(t.status)}">${STATUS_LABELS[t.status] || esc(t.status)}</span>
+      <span class="badge-tag">${esc(TEAM_LABELS[t.team] || t.team)}</span>
+    </div>
+    ${field('Користувач і роль', `<b>${esc(t.user_name)}</b> · ${esc(t.user_role)}`)}
+    ${field('Початкове звернення', `<div class="admin-quote">«${esc(t.original_message)}»</div>`)}
+    ${field('Опис проблеми', `<b>${esc(t.problem)}</b> <span class="admin-muted">(${esc(t.category)})</span>`)}
+    ${field('Перевірений контекст', esc(t.verified_context))}
+    ${field('Що вже перевірив AI', esc(t.checked_by_ai))}
+    ${field('Причина ескалації', esc(t.escalation_reason))}
+    ${actions}
+    ${field('Історія', `<ul class="admin-timeline">${t.history.map(h =>
+        `<li><b>${esc(h.ts)}</b> · ${esc(EVENT_LABELS[h.event] || h.event)} — ${esc(h.by)}${h.event === 'resolved' ? `: ${esc(h.note)}` : ''}</li>`).join('')}</ul>`)}
+  `;
+}
+
+$('admin-detail-body').addEventListener('click', event => {
+  const chip = event.target.closest('[data-template]');
+  if (chip) $('admin-resolution').value = chip.dataset.template;
+});
+
+async function adminTake(id) {
+  try {
+    await api('/admin/escalations/' + encodeURIComponent(id) + '/take', {
+      method: 'POST', body: JSON.stringify({ admin_name: ADMIN_NAME })
+    });
+  } catch (error) {
+    alert('Не вдалося взяти тікет ' + id + ' в роботу (можливо, його вже взяли).');
+  }
+  await loadAdminQueue();
+}
+
+async function adminResolve(id) {
+  const resolution = ($('admin-resolution')?.value || '').trim();
+  try {
+    const ticket = await api('/admin/escalations/' + encodeURIComponent(id) + '/resolve', {
+      method: 'POST', body: JSON.stringify({ admin_name: ADMIN_NAME, resolution: resolution || null })
+    });
+    if (ticket.source_role === 'teacher' && typeof teacherSyncStaleStatus === 'function') {
+      await teacherSyncStaleStatus();  // слот у календарі викладача звільнено
     }
   } catch (error) {
     console.error('Escalation resolve failed', error);
-    alert('Не вдалося затвердити тікет ' + id + '. Спробуйте ще раз.');
+    alert('Не вдалося вирішити тікет ' + id + '. Спробуйте ще раз.');
   }
+  await loadAdminQueue();
+}
+
+async function loadAuditLog() {
+  const items = await api('/audit');
+  $('audit-list').innerHTML = items.slice().reverse().slice(0, 40).map(x => {
+    const { ts, event, ...data } = x;
+    const details = Object.entries(data).map(([k, v]) => `${k}=${v}`).join(', ');
+    return `<div class="audit-row"><span class="ts">${esc(ts)}</span><span class="ev">${esc(event)}</span><span class="admin-muted">${esc(details)}</span></div>`;
+  }).join('') || '<p class="admin-muted">Журнал порожній.</p>';
+}
+
+/* Рішення адміністратора повертаються в чат користувача */
+const ROLE_CHATS = { teacher: 'teacher-chat', parent: 'parent-chat', student: 'student-chat' };
+async function deliverAdminUpdates(role) {
+  if (!ROLE_CHATS[role]) return;
+  try {
+    const updates = await api('/role-chat/updates?role=' + role, { method: 'POST' });
+    updates.forEach(u => addChatBubble($(ROLE_CHATS[role]), 'b-ai', 'AI Support Agent',
+      `Оновлення по тікету ${u.id} («${u.problem}»): адміністратор вирішив звернення. ${u.resolution}`));
+  } catch (error) {
+    console.error('Admin updates failed', error);
   }
+}
+
+/* ADMIN TABS: ескалації | AI-копілот | ефективність */
+function showAdminTab(tab) {
+  ['esc', 'copilot', 'analytics'].forEach(t => {
+    $('admin-tab-' + t).style.display = t === tab ? 'block' : 'none';
+    $('admin-tabbtn-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'esc') loadAdminQueue();
+  if (tab === 'copilot') loadCopilot();
+  if (tab === 'analytics') loadAnalytics();
+}
+
+/* AI-КОПІЛОТ: черга звернень учнів, аналіз, дії з policy-guard, чернетка відповіді */
+const INTENT_LABELS = { refund: 'Повернення коштів', double_charge: 'Подвійне списання', access: 'Доступ до курсу',
+  deadline: 'Дедлайн', transfer: 'Перенос потоку', certificate: 'Сертифікат', other: 'Інше' };
+const GOAL_LABELS = { needs_more_time: '⏳ Бракує часу — учня можна зберегти', disengaged_or_mismatch: '🙅 Курс не підійшов',
+  billing_error: '💳 Помилка білінгу', access_problem: '🔒 Технічний збій доступу', info: 'ℹ️ Потрібна інформація', unknown: '❔ Неясно' };
+const SENTIMENT_LABELS = { neutral: '😐 нейтральний', negative: '😟 негативний', angry: '😡 роздратований' };
+const RISK_LABELS = { low: 'низький ризик', medium: 'середній ризик', high: 'високий ризик' };
+const copilotState = { selected: null, students: [] };
+
+async function loadCopilot() {
+  try {
+    const [items, students] = await Promise.all([api('/tickets'), copilotState.students.length ? copilotState.students : api('/students')]);
+    copilotState.students = students;
+    if (!$('copilot-student').options.length) {
+      $('copilot-student').innerHTML = students.map(s => `<option value="${esc(s.id)}">${esc(s.name)} — ${esc(s.course)}</option>`).join('');
+      $('copilot-message').value = students[0]?.demo_message || '';
+    }
+    const open = items.filter(t => t.status === 'open');
+    $('copilot-counter').textContent = `${open.length} відкритих`;
+    $('copilot-list').innerHTML = items.map(t => `
+      <div class="copilot-item ${t.id === copilotState.selected ? 'selected' : ''} ${t.status !== 'open' ? 'done' : ''}" data-id="${esc(t.id)}">
+        <div style="display:flex; justify-content:space-between; gap:6px;">
+          <b>${esc(t.student)}</b>
+          <span class="badge-tag ${t.priority.label === 'P1' ? 'badge-p1' : t.priority.label === 'P2' ? 'badge-p2' : ''}">${esc(t.priority.label)}</span>
+        </div>
+        <div class="admin-muted" style="font-size:11px;">${esc(INTENT_LABELS[t.intent] || t.intent || '—')} · ризик відтоку ${t.churn_risk}% · ${t.status === 'open' ? 'відкрито' : '✅ вирішено'}</div>
+        <div style="font-size:12px; margin-top:3px;">${esc(t.last)}</div>
+      </div>`).join('');
+    if (copilotState.selected) showTicket(copilotState.selected);
+  } catch (error) {
+    console.error('Copilot load failed', error);
+    $('copilot-list').innerHTML = '<p class="admin-muted">Не вдалося завантажити звернення.</p>';
+  }
+}
+
+$('copilot-student').addEventListener('change', event => {
+  const s = copilotState.students.find(x => x.id === event.target.value);
+  $('copilot-message').value = s?.demo_message || '';
+});
+
+$('copilot-list').addEventListener('click', event => {
+  const item = event.target.closest('[data-id]');
+  if (!item) return;
+  copilotState.selected = item.dataset.id;
+  document.querySelectorAll('#copilot-list .copilot-item').forEach(x => x.classList.toggle('selected', x === item));
+  showTicket(item.dataset.id);
+});
+
+async function copilotCreate() {
+  const message = $('copilot-message').value.trim();
+  if (!message) return;
+  const btn = $('copilot-create-btn');
+  btn.disabled = true;
+  btn.textContent = 'AI аналізує…';
+  try {
+    const t = await api('/tickets', { method: 'POST', body: JSON.stringify({ student_id: $('copilot-student').value, message }) });
+    copilotState.selected = t.id;
+    await loadCopilot();
+  } catch (error) {
+    alert('Не вдалося створити звернення.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 Надіслати звернення';
+  }
+}
+
+async function showTicket(id) {
+  let t;
+  try {
+    t = await api('/tickets/' + encodeURIComponent(id));
+  } catch (error) {
+    $('copilot-detail').innerHTML = '<p class="admin-muted">Звернення не знайдено.</p>';
+    return;
+  }
+  const a = t.analysis || {};
+  const field = (k, v) => `<div class="admin-field"><div class="k">${k}</div><div>${v}</div></div>`;
+  const thread = t.messages.map(m => {
+    const q = m.quality ? ` <span class="badge-tag ${m.quality.score >= 80 ? 'st-resolved' : m.quality.score >= 55 ? 'st-in_progress' : 'badge-p1'}">якість ${m.quality.score}/100</span>` : '';
+    const who = m.role === 'student' ? t.student.name : m.role === 'agent' ? (m.agent || 'Агент') + (m.from_ai_draft ? ' (AI-чернетка)' : '') : 'Система';
+    return `<div class="copilot-msg msg-${esc(m.role)}"><b>${esc(who)}</b>${q}<br>${esc(m.text)}</div>`;
+  }).join('');
+
+  const actions = t.actions.map(x => `
+    <div class="copilot-action ${x.recommended ? 'rec' : ''}">
+      <div style="display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap;">
+        <b>${x.recommended ? '⭐ ' : ''}${esc(x.title)}</b>
+        <span class="badge-tag ${x.risk === 'high' ? 'badge-p1' : x.risk === 'medium' ? 'badge-p2' : 'st-resolved'}">${RISK_LABELS[x.risk] || esc(x.risk)}</span>
+      </div>
+      <div class="admin-muted" style="font-size:12px;">${esc(x.rationale)}</div>
+      ${x.status === 'proposed'
+        ? `<div class="admin-actions">
+             <button class="btn ok" onclick="copilotAction('${esc(t.id)}','${esc(x.id)}','approve')">✅ Підтвердити</button>
+             <button class="btn" onclick="copilotAction('${esc(t.id)}','${esc(x.id)}','reject')">✖ Відхилити</button>
+           </div>`
+        : `<div style="font-size:12px; margin-top:4px;"><b>${x.status === 'executed' ? '✅ Виконано' : x.status === 'failed' ? '⛔ Заблоковано політикою' : '❌ Відхилено'}</b>
+             ${esc(x.result?.summary || x.error || '')}${x.executed_by === 'ai' ? ' (AI автоматично)' : ''}</div>`}
+    </div>`).join('') || '<p class="admin-muted">AI не пропонує дій — потрібне уточнення.</p>';
+
+  $('copilot-detail').innerHTML = `
+    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+      <b style="font-family:'Outfit',sans-serif; font-size:16px;">${esc(t.id)} · ${esc(t.student.name)}</b>
+      <span class="badge-tag">${esc(t.student.course)}</span>
+      ${a.priority ? `<span class="badge-tag ${a.priority.label === 'P1' ? 'badge-p1' : 'badge-p2'}">${esc(a.priority.label)}</span>` : ''}
+      <span class="badge-tag ${t.status === 'open' ? 'st-pending' : 'st-resolved'}">${t.status === 'open' ? 'відкрито' : 'вирішено'}</span>
+    </div>
+    <div class="copilot-thread">${thread}</div>
+    <div class="copilot-analysis">
+      <div class="k" style="font-family:'Outfit',sans-serif; font-weight:900; margin-bottom:6px;">🧠 AI-аналіз <span class="admin-muted" style="font-weight:600;">(${a.source === 'llm' ? 'Gemini' : 'правила'})</span></div>
+      ${field('Намір → справжня мета', `${esc(INTENT_LABELS[a.intent] || a.intent)} → <b>${esc(GOAL_LABELS[a.true_goal] || a.true_goal)}</b>`)}
+      ${field('Тон і ризик відтоку', `${esc(SENTIMENT_LABELS[a.sentiment] || a.sentiment)}${a.sarcasm ? ' · 🙃 сарказм' : ''} · <b>${a.churn_risk}%</b>`)}
+      ${field('Чому так вирішив AI', `<ul style="margin:0; padding-left:18px;">${(a.reasoning || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul>`)}
+    </div>
+    ${field('Дії (виконуються лише через policy-guard)', actions)}
+    <div class="admin-field"><div class="k">Чернетка відповіді від AI</div>
+      <textarea id="copilot-reply" maxlength="2000">${esc(a.suggested_reply || '')}</textarea>
+      <div class="admin-actions"><button class="btn primary" onclick="copilotReply('${esc(t.id)}')">📨 Надіслати учню</button></div>
+    </div>
+  `;
+  $('copilot-detail').dataset.draft = a.suggested_reply || '';
+}
+
+async function copilotAction(tid, aid, verb) {
+  try {
+    await api(`/tickets/${encodeURIComponent(tid)}/actions/${encodeURIComponent(aid)}/${verb}`, { method: 'POST' });
+  } catch (error) {
+    alert('Дію не виконано (статус уже змінено).');
+  }
+  await loadCopilot();
+}
+
+async function copilotReply(tid) {
+  const text = $('copilot-reply').value.trim();
+  if (!text) return;
+  try {
+    await api(`/tickets/${encodeURIComponent(tid)}/send-reply`, { method: 'POST', body: JSON.stringify({
+      text, from_ai_draft: text === $('copilot-detail').dataset.draft.trim(), agent_name: 'Головний Адміністратор' }) });
+  } catch (error) {
+    alert('Не вдалося надіслати відповідь.');
+  }
+  await loadCopilot();
+}
+
+/* ЕФЕКТИВНІСТЬ ПІДТРИМКИ */
+async function loadAnalytics() {
+  let a, st;
+  try {
+    [a, st] = await Promise.all([api('/analytics'), api('/admin/stats')]);
+  } catch (error) {
+    $('analytics-body').innerHTML = '<p class="admin-muted">Не вдалося завантажити аналітику.</p>';
+    return;
+  }
+  const tile = (val, lbl, sub = '') => `<div class="admin-stat"><div class="val">${val}</div><div class="lbl">${lbl}</div>${sub ? `<div class="admin-muted" style="font-size:11px; margin-top:2px;">${sub}</div>` : ''}</div>`;
+  const q = a.quality;
+  const maxIntent = Math.max(1, ...Object.values(a.by_intent));
+  $('analytics-body').innerHTML = `
+    <div class="admin-stats">
+      ${tile(a.automation.executed, 'AI-дій виконано', `з них автоматично: ${a.automation.executed_by_ai} · запропоновано: ${a.automation.proposed}`)}
+      ${tile(a.automation.blocked_by_policy, 'Заблоковано політикою', 'policy-guard не дав виконати небезпечне')}
+      ${tile(`${a.retention.saved} / ${a.retention.refund_requests}`, 'Учнів врятовано від повернення', `${a.retention.saved_amount.toLocaleString('uk-UA')} грн збережено`)}
+      ${tile(`${a.time_saved_min} хв`, 'Зекономлено часу агентів', esc(a.note))}
+    </div>
+    <div class="admin-stats">
+      ${tile(q.avg_ai_draft ?? '—', 'Якість: AI-чернетки', 'середній бал /100')}
+      ${tile(q.avg_manual ?? '—', 'Якість: відповіді вручну', `низька якість: ${q.low_quality} з ${q.count}`)}
+      ${tile(a.avg_open_churn_risk != null ? a.avg_open_churn_risk + '%' : '—', 'Середній ризик відтоку', 'по відкритих зверненнях')}
+      ${tile(st.pending + st.in_progress, 'Ескалацій у роботі', `P1 відкритих: ${st.p1_open} · вирішено: ${st.resolved}`)}
+    </div>
+    <div class="panel-box" style="margin-top:4px;">
+      <div class="panel-header"><h2>Звернення за наміром</h2><span class="admin-muted" style="font-size:12px;">усього ${a.total_tickets}</span></div>
+      <div style="padding:14px 18px;">
+        ${Object.entries(a.by_intent).sort((x, y) => y[1] - x[1]).map(([k, v]) => `
+          <div class="intent-row" title="${esc(INTENT_LABELS[k] || k)}: ${v}">
+            <span class="intent-name">${esc(INTENT_LABELS[k] || k)}</span>
+            <span class="intent-track"><span class="intent-bar" style="width:${(v / maxIntent) * 100}%"></span></span>
+            <span class="intent-val">${v}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
 }
 
 async function resetDemo() {

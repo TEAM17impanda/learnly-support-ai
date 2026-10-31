@@ -169,3 +169,104 @@ def test_escalation_resolution_note_matches_problem():
     esc = next(e for e in client.get("/api/admin/escalations").json() if "дитини" in e["problem"])
     note = client.post(f"/api/admin/escalations/{esc['id']}/resolve").json()["resolution_note"]
     assert "баланс" not in note
+
+
+def test_admin_ticket_lifecycle_and_result_returns_to_user_chat():
+    """Концепція, розд. 3: тікет → взяти в роботу → рішення → результат в історії користувача."""
+    r = client.post("/api/role-chat", json={"role": "parent", "message": "Оплата пройшла, а баланс 0"}).json()
+    esc_id = r["escalated_ticket"]["id"]
+    esc = client.get(f"/api/admin/escalations/{esc_id}").json()
+    for field in ("user_name", "user_role", "original_message", "problem", "verified_context",
+                  "checked_by_ai", "escalation_reason", "priority", "status"):
+        assert esc[field]
+    assert esc["status"] == "pending" and esc["team"] == "finance"
+
+    taken = client.post(f"/api/admin/escalations/{esc_id}/take", json={"admin_name": "Ірина"}).json()
+    assert taken["status"] == "in_progress" and taken["assignee"] == "Ірина"
+    assert client.post(f"/api/admin/escalations/{esc_id}/take").status_code == 409
+
+    done = client.post(f"/api/admin/escalations/{esc_id}/resolve",
+                       json={"resolution": "Зараховано 8 занять"}).json()
+    assert done["status"] == "resolved" and done["resolution"] == "Зараховано 8 занять"
+    assert [h["event"] for h in done["history"]] == ["created", "taken", "resolved"]
+    assert client.post(f"/api/admin/escalations/{esc_id}/resolve").status_code == 409
+
+    updates = client.post("/api/role-chat/updates?role=parent").json()
+    assert [u["id"] for u in updates] == [esc_id]
+    assert client.post("/api/role-chat/updates?role=parent").json() == []   # доставляється один раз
+    events = [a["event"] for a in client.get("/api/audit").json()]
+    assert {"escalation_created", "escalation_taken", "escalation_resolved"} <= set(events)
+
+
+def test_admin_queue_filters_and_stats():
+    client.post("/api/admin/escalations/ESC-102/resolve")
+    assert [e["id"] for e in client.get("/api/admin/escalations?status=resolved").json()] == ["ESC-102"]
+    assert all(e["priority"] == "P1" for e in client.get("/api/admin/escalations?priority=P1").json())
+    st = client.get("/api/admin/stats").json()
+    assert st["resolved"] == 1 and st["pending"] == 1 and st["p1_open"] == 1
+    assert client.get("/api/admin/escalations/ESC-999").status_code == 404
+
+
+@pytest.mark.parametrize("role", ["student", "teacher", "parent"])
+@pytest.mark.parametrize("text", ["привіт", "помий підлогу"])
+def test_role_chat_does_not_force_scenario_on_unrelated_message(role, text):
+    """Раніше будь-яке повідомлення падало в «else»-сценарій, а в батьків ще й створювало тікет."""
+    before = len(client.get("/api/admin/escalations").json())
+    r = client.post("/api/role-chat", json={"role": role, "message": text}).json()
+    assert r["decision_type"] == "needs_clarification" and r["source"] == "rules"
+    assert r["intent"] == ("greeting" if text == "привіт" else "unclear")
+    assert "синхронізувала" not in r["ai_reply"] and "ESC-" not in r["ai_reply"]
+    assert len(client.get("/api/admin/escalations").json()) == before
+
+
+@pytest.mark.parametrize("role,text,intent", [
+    ("student", "Не можу увійти, не приходить код SMS", "auth_issue"),
+    ("student", "Здав домашнє завдання, а пише що не здано", "homework_sync_issue"),
+    ("teacher", "На п'ятницю 17:00 два учні в одному слоті", "double_booking"),
+    ("teacher", "Артем Литвин завершив курс, а досі займає слот", "stale_record"),
+    ("parent", "Гроші списали, а баланс занять 0", "payment_missing"),
+    ("parent", "Не можу додати профіль доньки", "sibling_profile_issue"),
+])
+def test_role_chat_recognises_known_scenarios(role, text, intent):
+    assert client.post("/api/role-chat", json={"role": role, "message": text}).json()["intent"] == intent
+
+
+def test_state_survives_restart(tmp_path):
+    """Стан зберігається в SQLite і піднімається новим процесом (тут — новим State)."""
+    from app.db import Database
+    from app.store import State
+
+    path = str(tmp_path / "learnly.db")
+    st = State(Database(path))
+    assert st.load() is False                        # порожня база → потрібен seed
+    st.students["s1"]["extensions_used"] = 2
+    st.tickets["T-1"] = {"id": "T-1", "student_id": "s1", "status": "open", "messages": []}
+    st.escalations[0]["status"] = "resolved"
+    st.new_esc_id()
+    st.log("test_event", x=1)
+    st.save()
+
+    again = State(Database(path))
+    assert again.load() is True
+    assert again.students["s1"]["extensions_used"] == 2
+    assert again.tickets["T-1"]["status"] == "open"
+    assert again.escalations[0]["status"] == "resolved"
+    assert again.new_esc_id() == "ESC-104"           # лічильники ID не повторюються після рестарту
+    assert again.audit[-1] == {"ts": again.audit[-1]["ts"], "event": "test_event", "x": 1}
+
+
+def test_api_changes_are_written_to_db():
+    from app.store import STATE
+    client.post("/api/admin/escalations/ESC-101/take", json={"admin_name": "Ірина"})
+    row = STATE.db.conn.execute("SELECT status FROM escalations WHERE id = 'ESC-101'").fetchone()
+    assert row == ("in_progress",)
+
+
+def test_role_chat_handles_joke_and_sarcasm():
+    joke = client.post("/api/role-chat", json={"role": "student", "message": "помий підлогу хаха"}).json()
+    assert joke["tone"] == "joke" and "жарт" in joke["ai_reply"]
+
+    sarcasm = client.post("/api/role-chat", json={
+        "role": "student", "message": "Супер платформа, знову не приходить код SMS"}).json()
+    assert sarcasm["intent"] == "auth_issue" and sarcasm["tone"] == "sarcasm"   # суть розпізнана
+    assert sarcasm["ai_reply"].startswith("Розумію, що ситуація неприємна")

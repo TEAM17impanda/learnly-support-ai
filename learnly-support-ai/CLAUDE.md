@@ -6,7 +6,7 @@
 AI не відповідає, а **розуміє справжню мету учня, пропонує/виконує дію (tool calling з policy-guard) і підказує агенту підтримки**, а дашборд показує ефективність і врятованих від відтоку учнів.
 
 ## Стек
-- Бекенд: Python 3.11+, FastAPI, pydantic, in-memory store (без БД — це MVP)
+- Бекенд: Python 3.11+, FastAPI, pydantic, SQLite (`data/learnly.db`, створюється сама; видаліть файл, щоб почати демо з нуля)
 - AI: Google Gemini API (`GEMINI_API_KEY`, модель з `LLM_MODEL`), **завжди є rule-based fallback**, щоб демо працювало без ключа/інтернету
 - Фронтенд: один файл `static/index.html` (vanilla JS), без збірки
 - Тести: pytest + FastAPI TestClient
@@ -26,7 +26,8 @@ pytest -q
 - `app/tools.py` — дії AI: `check()` + `run()` з policy-guard. **Єдине місце, що змінює стан учня**
 - `app/agent.py` — аналіз звернення: LLM → валідація → fallback на правила
 - `app/quality.py` — оцінка якості відповідей агентів
-- `app/store.py` — in-memory стан, тікети, audit log, налаштування автономності
+- `app/store.py` — стан у пам'яті (учні, тікети, ескалації, audit log, налаштування) + load/save
+- `app/db.py` — SQLite-схема й збереження; middleware у `main.py` зберігає стан після кожного POST
 - `app/main.py` — REST API + роздача `static/`
 - `docs/features/ai-support-copilot/` — документація фічі (10 файлів, див. skill `feature-docs`)
 
@@ -50,4 +51,4 @@ pytest -q
 | `pitch-and-submit` | Слайди, чекліст здачі до 17:00 |
 
 ## Чого НЕ робимо за 5 годин
-Авторизація, реальна БД, інтеграції з Zendesk/Intercom, мультимовність, продакшн-деплой. Усе це — у слайді «Roadmap».
+Авторизація, продакшн-БД (Postgres, міграції), інтеграції з Zendesk/Intercom, мультимовність, продакшн-деплой. Усе це — у слайді «Roadmap».

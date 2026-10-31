@@ -1,10 +1,12 @@
 """REST API + роздача фронтенду."""
+import asyncio
 import copy
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
@@ -18,6 +20,18 @@ from .quality import score_reply  # noqa: E402
 from .store import STATE, now  # noqa: E402
 
 app = FastAPI(title="Learnly Support AI")
+_write_lock = asyncio.Lock()
+
+
+@app.middleware("http")
+async def persist_changes(request: Request, call_next):
+    """Змінюючі запити виконуються по черзі; після кожного стан зберігається в SQLite."""
+    if request.method == "GET":
+        return await call_next(request)
+    async with _write_lock:
+        response = await call_next(request)
+        STATE.save()
+        return response
 STATIC = Path(__file__).resolve().parent.parent / "static"
 RETENTION_TOOLS = {"transfer_cohort", "extend_deadline", "book_mentor_session"}
 MINUTES_PER_ACTION, MINUTES_PER_DRAFT = 4, 2  # оцінка ручної роботи, яку економить AI
@@ -161,7 +175,8 @@ def _new_ticket(sid: str, message: str) -> dict:
 # ---------------- API ----------------
 @app.get("/api/health")
 def health():
-    return {"ok": True, "llm": bool(os.getenv("GEMINI_API_KEY")), "autonomy": STATE.settings["autonomy"]}
+    return {"ok": True, "llm": bool(os.getenv("GEMINI_API_KEY")), "autonomy": STATE.settings["autonomy"],
+            "db": Path(STATE.db.path).name}
 
 
 @app.get("/api/students")
@@ -395,9 +410,8 @@ def reset_teacher_calendar():
     """Скидання стану розкладу вчителя до демо-конфлікту без впливу на інші ролі."""
     STATE.calendar = copy.deepcopy(INITIAL_CALENDAR)
     esc = next((e for e in STATE.escalations if e["id"] == "ESC-102"), None)
-    if esc:
-        esc["status"] = "pending"
-        esc.pop("resolution_note", None)
+    if esc and esc["status"] != "pending":
+        _reopen_escalation(esc, "Календар викладача скинуто до демо-конфлікту")
     STATE.log("teacher_calendar_reset")
     return {"ok": True, "calendar": STATE.calendar}
 
@@ -450,46 +464,88 @@ def teacher_escalate_stale(body: EscalateStale):
     STATE.calendar["stale_escalated"] = True
     esc = next((e for e in STATE.escalations if e["id"] == "ESC-102"), None)
     if not esc:
-        esc_id = "ESC-102"
-        new_esc = {
-            "id": esc_id,
-            "user_name": "Олена Іванівна",
-            "user_role": "Викладач",
-            "problem": "Застарілий запис учня Артема Литвина після завершення курсу",
-            "verified_context": "Курс завершено 7 днів тому (100% уроків пройдено). Запис у календарі активний.",
-            "checked_by_ai": "Статус проходження курсу, сертифікацію, помилку вебхук-синхронізації",
-            "escalation_reason": "Потрібна синхронізація з навчальним відділом щодо наступного модуля",
-            "priority": "P2",
-            "status": "pending",
-            "created_at": now(),
-        }
-        STATE.escalations.append(new_esc)
-        esc = new_esc
-        STATE.log("teacher_stale_escalated", esc_id=esc_id)
+        esc = _create_escalation(
+            source_role="teacher", user_name="Олена Іванівна", category="Календар / застарілий запис",
+            team="admin", original_message="Артем Литвин завершив курс, але досі займає слот у вівторок 16:00.",
+            problem="Застарілий запис учня Артема Литвина після завершення курсу",
+            verified_context="Курс завершено 7 днів тому (100% уроків пройдено). Запис у календарі активний.",
+            checked_by_ai="Статус проходження курсу, сертифікацію, помилку вебхук-синхронізації",
+            escalation_reason="Потрібна синхронізація з навчальним відділом щодо наступного модуля",
+            priority="P2",
+        )
+        STATE.log("teacher_stale_escalated", esc_id=esc["id"])
     else:
-        esc["status"] = "pending"
-        STATE.log("teacher_stale_escalated_existing", esc_id="ESC-102")
+        if esc["status"] != "pending":
+            _reopen_escalation(esc, "Викладач повторно передав тікет адміністратору")
+        STATE.log("teacher_stale_escalated_existing", esc_id=esc["id"])
 
     return {
         "ok": True,
         "escalation": esc,
         "calendar": STATE.calendar,
-        "message": "Тікет ESC-102 передано до черги адміністратора для координації з навчальним відділом.",
+        "message": f"Тікет {esc['id']} передано до черги адміністратора для координації з навчальним відділом.",
     }
+
+
+# сценарій спрацьовує лише за явними ознаками; інше — уточнення/відмова без дій і тікетів
+ROLE_SCENARIOS = {
+    "student": [
+        ("auth", ["увійт", "вхід", "зайти", "логін", "парол", "код", "sms", "смс"]),
+        ("homework", ["домашн", "дз", "завдання", "здав", "здала", "відправив", "відправила",
+                      "надіслав", "надіслала", "не здан", "файл"]),
+    ],
+    "parent": [
+        ("payment", ["оплат", "сплат", "баланс", "списал", "списан", "2400", "2,400", "платіж",
+                     "гроші", "заплатил"]),
+        ("sibling", ["дитин", "доньк", "дочк", "сина", "профіль", "сімейн"]),
+    ],
+}
+
+
+def _detect_role_scenario(role: str, msg_l: str) -> str | None:
+    if role == "teacher":  # у викладача власний агент і словники (teacher_agent.py)
+        intent = teacher_agent.detect_teacher_intent(msg_l)
+        return None if intent == "other" else intent
+    words = set(re.findall(r"\w+", msg_l))
+    for scenario, keys in ROLE_SCENARIOS[role]:
+        # короткі ключі (дз, код) — лише цілим словом, щоб «кодування» не стало «кодом»
+        if any((k in words) if len(k) <= 4 and k.isalpha() else (k in msg_l) for k in keys):
+            return scenario
+    return None
 
 
 @app.post("/api/role-chat")
 def role_chat(body: RoleChatMessage):
-    role = body.role
     msg = body.message.strip()
-    msg_l = msg.lower()
+    tone = agent.detect_tone(msg)
+    scenario = _detect_role_scenario(body.role, msg.lower())
 
+    if scenario is None:
+        reply, source = agent.role_reply(body.role, msg)
+        STATE.log("role_chat_clarify", role=body.role, source=source, tone=tone)
+        return {
+            "role": body.role,
+            "intent": "greeting" if agent.is_greeting(msg) else tone or "unclear",
+            "intent_title": "Уточнення запиту",
+            "decision_type": "needs_clarification",
+            "source": source, "tone": tone,
+            "ai_reply": reply,
+        }
+
+    res = _role_scenario_reply(body.role, scenario, msg)
+    res["tone"] = tone
+    if tone == "sarcasm":  # іронію не сприймаємо буквально — спершу визнаємо незручність
+        res["ai_reply"] = "Розумію, що ситуація неприємна, — перепрошую за незручності. " + res["ai_reply"]
+    return res
+
+
+def _role_scenario_reply(role: str, scenario: str, msg: str) -> dict:
     if role == "teacher":
-        result = teacher_agent.analyze_teacher_message(msg, STATE.calendar)
-        return {"role": role, **result}
+        STATE.log("teacher_role_chat", scenario=scenario)
+        return {"role": role, **teacher_agent.analyze_teacher_message(msg, STATE.calendar)}
 
     elif role == "student":
-        if any(w in msg_l for w in ["увійт", "вхід", "код", "парол", "телефон"]):
+        if scenario == "auth":
             STATE.log("student_auth_check", student="Денис Коваль")
             return {
                 "role": role,
@@ -532,22 +588,17 @@ def role_chat(body: RoleChatMessage):
             }
 
     else:  # parent
-        if any(w in msg_l for w in ["оплат", "баланс", "списал", "2400", "2,400", "урок"]):
-            esc_id = STATE.new_esc_id()
-            new_esc = {
-                "id": esc_id,
-                "user_name": "Оксана Шевченко",
-                "user_role": "Батьки",
-                "problem": "Оплата 2,400 грн списана з картки, баланс уроків не поповнився",
-                "verified_context": "Monobank транзакція TX-9842 успішна. Вебхук білінгу отримано, але статус обробки застряг.",
-                "checked_by_ai": "Банківський шлюз (успішно), лог білінгу, баланс сім'ї (0 занять)",
-                "escalation_reason": "Політика безпеки: фінансові нарахування потребують авторизації адміністратора",
-                "priority": "P1",
-                "status": "pending",
-                "created_at": now(),
-            }
-            STATE.escalations.insert(0, new_esc)
-            STATE.log("escalation_created", esc_id=esc_id, role="parent", priority="P1")
+        if scenario == "payment":
+            new_esc = _create_escalation(
+                source_role="parent", user_name="Оксана Шевченко", category="Оплата / нарахування занять",
+                team="finance", original_message=msg,
+                problem="Оплата 2,400 грн списана з картки, баланс уроків не поповнився",
+                verified_context="Monobank транзакція TX-9842 успішна. Вебхук білінгу отримано, але статус обробки застряг.",
+                checked_by_ai="Банківський шлюз (успішно), лог білінгу, баланс сім'ї (0 занять)",
+                escalation_reason="Політика безпеки: фінансові нарахування потребують авторизації адміністратора",
+                priority="P1",
+            )
+            esc_id = new_esc["id"]
             return {
                 "role": role,
                 "intent": "payment_missing",
@@ -565,21 +616,16 @@ def role_chat(body: RoleChatMessage):
                             "Він уже взятий у чергу з найвищим пріоритетом!",
             }
         else:
-            esc_id = STATE.new_esc_id()
-            new_esc = {
-                "id": esc_id,
-                "user_name": "Оксана Шевченко",
-                "user_role": "Батьки",
-                "problem": "Не вдається додати профіль другої дитини (Марія, 6 років)",
-                "verified_context": "Основний акаунт активний. Спроба створити сімейний профіль.",
-                "checked_by_ai": "Наявність дублікатів у базі, сімейний тариф",
-                "escalation_reason": "Потрібна ручна валідація сімейного зв'язку в CRM адміністратором",
-                "priority": "P2",
-                "status": "pending",
-                "created_at": now(),
-            }
-            STATE.escalations.append(new_esc)
-            STATE.log("escalation_created", esc_id=esc_id, role="parent", priority="P2")
+            new_esc = _create_escalation(
+                source_role="parent", user_name="Оксана Шевченко", category="Сімейний акаунт",
+                team="admin", original_message=msg,
+                problem="Не вдається додати профіль другої дитини (Марія, 6 років)",
+                verified_context="Основний акаунт активний. Спроба створити сімейний профіль.",
+                checked_by_ai="Наявність дублікатів у базі, сімейний тариф",
+                escalation_reason="Потрібна ручна валідація сімейного зв'язку в CRM адміністратором",
+                priority="P2",
+            )
+            esc_id = new_esc["id"]
             return {
                 "role": role,
                 "intent": "sibling_profile_issue",
@@ -601,27 +647,142 @@ def resolve_booking(body: ResolveBooking):
     return teacher_resolve_booking(body)
 
 
-@app.get("/api/admin/escalations")
-def admin_escalations():
-    return STATE.escalations
+# ---------------- адмінка: черга ескалацій ----------------
+ROLE_LABELS = {"student": "Учень", "teacher": "Викладач", "parent": "Батьки"}
+ESC_STATUSES = ("pending", "in_progress", "resolved")
+DEFAULT_RESOLUTIONS = {
+    "finance": "Транзакцію підтверджено, заняття зараховано на баланс.",
+    "tech": "Технічну проблему усунено, доступ перевірено.",
+    "admin": "Запит опрацьовано вручну адміністратором.",
+    "teacher": "Навчальний відділ погодив звільнення слота. Слот Вівторок 16:00 звільнено.",
+}
 
 
-@app.post("/api/admin/escalations/{esc_id}/resolve")
-def resolve_escalation(esc_id: str):
+class TakeEscalation(BaseModel):
+    admin_name: str = Field("Адміністратор", min_length=1, max_length=80)
+
+
+class ResolveEscalation(BaseModel):
+    admin_name: str = Field("Адміністратор", min_length=1, max_length=80)
+    resolution: str | None = Field(None, max_length=1000)
+
+
+def _create_escalation(*, source_role: str, user_name: str, category: str, team: str,
+                       original_message: str, problem: str, verified_context: str,
+                       checked_by_ai: str, escalation_reason: str, priority: str) -> dict:
+    """Структурований тікет для адміністратора (поля — за концепцією, розділ 3)."""
+    ts = now()
+    esc = {
+        "id": STATE.new_esc_id(), "source_role": source_role, "user_name": user_name,
+        "user_role": ROLE_LABELS[source_role], "category": category, "team": team,
+        "original_message": original_message, "problem": problem,
+        "verified_context": verified_context, "checked_by_ai": checked_by_ai,
+        "escalation_reason": escalation_reason, "priority": priority,
+        "status": "pending", "created_at": ts, "updated_at": ts,
+        "assignee": None, "resolution": None, "delivered": False,
+        "history": [{"ts": ts, "event": "created", "by": "AI Support Agent",
+                     "note": "Тікет створено AI-агентом"}],
+    }
+    STATE.escalations.append(esc)
+    STATE.log("escalation_created", esc_id=esc["id"], role=source_role, priority=priority, team=team)
+    return esc
+
+
+def _escalation(esc_id: str) -> dict:
     esc = next((e for e in STATE.escalations if e["id"] == esc_id), None)
     if not esc:
         raise HTTPException(404, "Тікет не знайдено")
-    esc["status"] = "resolved"
-    if esc_id == "ESC-102" or esc.get("user_role") == "Викладач":
-        esc["resolution_note"] = "Вирішено адміністратором: навчальний відділ погодив звільнення слота. Слот Вівторок 16:00 звільнено."
+    return esc
+
+
+def _esc_event(esc: dict, event: str, by: str, note: str):
+    esc["updated_at"] = now()
+    esc["history"].append({"ts": esc["updated_at"], "event": event, "by": by, "note": note})
+
+
+def _reopen_escalation(esc: dict, note: str):
+    esc.update(status="pending", assignee=None, resolution=None, delivered=False)
+    esc.pop("resolution_note", None)
+    _esc_event(esc, "reopened", "AI Support Agent", note)
+
+
+def _esc_sort_key(e: dict):
+    return ESC_STATUSES.index(e["status"]), e["priority"], e["id"]
+
+
+@app.get("/api/admin/escalations")
+def admin_escalations(status: str | None = None, priority: str | None = None,
+                      role: str | None = None):
+    items = [e for e in STATE.escalations
+             if (not status or e["status"] == status)
+             and (not priority or e["priority"] == priority)
+             and (not role or e["source_role"] == role)]
+    return sorted(items, key=_esc_sort_key)
+
+
+@app.get("/api/admin/stats")
+def admin_stats():
+    items = STATE.escalations
+    by_team: dict = {}
+    for e in items:
+        if e["status"] != "resolved":
+            by_team[e["team"]] = by_team.get(e["team"], 0) + 1
+    return {
+        "total": len(items),
+        **{s: sum(e["status"] == s for e in items) for s in ESC_STATUSES},
+        "p1_open": sum(e["priority"] == "P1" and e["status"] != "resolved" for e in items),
+        "open_by_team": by_team,
+    }
+
+
+@app.get("/api/admin/escalations/{esc_id}")
+def get_escalation(esc_id: str):
+    return _escalation(esc_id)
+
+
+@app.post("/api/admin/escalations/{esc_id}/take")
+def take_escalation(esc_id: str, body: TakeEscalation | None = None):
+    body = body or TakeEscalation()
+    esc = _escalation(esc_id)
+    if esc["status"] != "pending":
+        raise HTTPException(409, f"Тікет уже має статус «{esc['status']}»")
+    esc["status"], esc["assignee"] = "in_progress", body.admin_name.strip()
+    _esc_event(esc, "taken", esc["assignee"], "Взято в роботу")
+    STATE.log("escalation_taken", esc_id=esc_id, by=esc["assignee"])
+    return esc
+
+
+@app.post("/api/admin/escalations/{esc_id}/resolve")
+def resolve_escalation(esc_id: str, body: ResolveEscalation | None = None):
+    body = body or ResolveEscalation()
+    esc = _escalation(esc_id)
+    if esc["status"] == "resolved":
+        raise HTTPException(409, "Тікет уже вирішено")
+    admin = body.admin_name.strip()
+    default = DEFAULT_RESOLUTIONS["teacher"] if esc["source_role"] == "teacher" else \
+        DEFAULT_RESOLUTIONS.get(esc["team"], DEFAULT_RESOLUTIONS["admin"])
+    resolution = (body.resolution or "").strip() or default
+    esc["status"], esc["resolution"] = "resolved", resolution
+    esc["assignee"] = esc["assignee"] or admin
+    esc["resolution_note"] = f"Вирішено адміністратором: {resolution}"
+    if esc["source_role"] == "teacher":  # рішення по застарілому запису звільняє слот у календарі викладача
         STATE.calendar["stale_resolved"] = True
         STATE.calendar["stale_resolution_note"] = esc["resolution_note"]
-    elif "оплат" in esc["problem"].lower():
-        esc["resolution_note"] = "Вирішено адміністратором: транзакцію підтверджено, заняття зараховано на баланс."
-    else:
-        esc["resolution_note"] = "Вирішено адміністратором: запит опрацьовано вручну."
-    STATE.log("escalation_resolved", esc_id=esc_id)
+    _esc_event(esc, "resolved", admin, resolution)
+    STATE.log("escalation_resolved", esc_id=esc_id, by=admin)
     return esc
+
+
+@app.post("/api/role-chat/updates")
+def role_chat_updates(role: str):
+    """Рішення адміністратора повертаються в історію чату користувача (один раз)."""
+    fresh = [e for e in STATE.escalations
+             if e["source_role"] == role and e["status"] == "resolved" and not e["delivered"]]
+    for e in fresh:
+        e["delivered"] = True
+        _esc_event(e, "delivered", "AI Support Agent", "Результат повідомлено користувачу")
+    return [{"id": e["id"], "problem": e["problem"], "resolution": e["resolution"],
+             "assignee": e["assignee"]} for e in fresh]
 
 
 @app.get("/")
@@ -632,4 +793,6 @@ def index():
 if STATIC.exists():
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
-_seed()
+if not STATE.load():  # порожня БД (перший запуск) — наповнюємо демо-даними
+    _seed()
+    STATE.save()
