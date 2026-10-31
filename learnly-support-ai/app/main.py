@@ -303,6 +303,215 @@ def analytics():
     }
 
 
+class RoleChatMessage(BaseModel):
+    role: str  # student | teacher | parent
+    scenario_id: str | None = None
+    message: str
+
+
+class ResolveBooking(BaseModel):
+    chosen_slot: str = "Субота 11:00"
+    student_to_move: str = "Марк Бондар"
+
+
+@app.get("/api/roles-data")
+def roles_data():
+    from .data import ROLE_PRESETS
+    return {
+        "roles": ROLE_PRESETS,
+        "calendar": STATE.calendar,
+        "escalations": STATE.escalations,
+    }
+
+
+@app.post("/api/role-chat")
+def role_chat(body: RoleChatMessage):
+    role = body.role
+    msg = body.message.strip()
+    msg_l = msg.lower()
+
+    if role == "teacher":
+        if any(w in msg_l for w in ["подвійн", "два учні", "конфлікт", "17:00"]):
+            STATE.log("conflict_detected", role="teacher", slot="П'ятниця 17:00")
+            return {
+                "role": role,
+                "intent": "double_booking_conflict",
+                "intent_title": "Подвійне бронювання одного слота",
+                "verified_context": {
+                    "slot": "П'ятниця 17:00",
+                    "student_1": {"name": "Денис Коваль", "time": "10:15", "priority": "перше бронювання"},
+                    "student_2": {"name": "Марк Бондар", "time": "10:18", "priority": "конфліктний дубль"},
+                    "alternatives": STATE.calendar["alternatives"],
+                    "resolved": STATE.calendar["resolved"],
+                },
+                "checked_by_ai": "Календар викладача, чергу транзакцій бронювань, вільні слоти на тиждень",
+                "decision_type": "can_resolve_with_approval",
+                "proposed_action": {
+                    "id": "ACT-DBL-1",
+                    "title": "Усунути конфлікт розкладу",
+                    "description": "Залишити Дениса Коваля на Пт 17:00. Запропонувати батькам Марка Бондаря альтернативний слот Субота 11:00 зі збереженням викладача.",
+                    "requires_approval": True,
+                },
+                "ai_reply": "Виявила накладку в календарі: слот П'ятниця 17:00 забронювали Денис Коваль (10:15) та Марк Бондар (10:18). "
+                            "Згідно з правилом черги, рекомендую зберегти слот за Денисом, а Марку запропонувати найближчий вільний час — Субота 11:00. "
+                            "Натисніть «Підтвердити», щоб я оновила бронювання та надіслала сповіщення обом родинам.",
+            }
+        else:
+            STATE.log("stale_record_checked", role="teacher")
+            return {
+                "role": role,
+                "intent": "stale_calendar_record",
+                "intent_title": "Застарілий запис після завершення курсу",
+                "verified_context": {
+                    "student": "Артем Литвин",
+                    "course_status": "Завершено 100% уроків",
+                    "calendar_slot": "Вівторок 16:00 (активний)",
+                },
+                "checked_by_ai": "Статус проходження курсу, дата фінального уроку, наявність сертифіката",
+                "decision_type": "escalate",
+                "escalation_reason": "Потрібна синхронізація з навчальним відділом: чи планується продовження навчання",
+                "priority": "P2",
+                "ai_reply": "Перевірила статус Артема Литвина: курс дійсно завершено минулого четверга. "
+                            "Слот у вівторок 16:00 не звільнився автоматично через очікування рішення батьків щодо продовження. "
+                            "Я сформувала тікет адміністратору (ESC-102) для безпечного звільнення слота.",
+            }
+
+    elif role == "student":
+        if any(w in msg_l for w in ["увійт", "вхід", "код", "парол", "телефон"]):
+            STATE.log("student_auth_check", student="Денис Коваль")
+            return {
+                "role": role,
+                "intent": "auth_issue",
+                "intent_title": "Проблема з авторизацією / кодом",
+                "verified_context": {
+                    "account_status": "Активний",
+                    "auth_method": "SMS verification (+380501234567)",
+                    "gateway_status": "Затримка доставки SMS оператора (код 429)",
+                },
+                "checked_by_ai": "Логи шлюзу авторизації, блокування IP, статус облікового запису",
+                "decision_type": "resolved_by_ai",
+                "proposed_action": {
+                    "title": "Надіслати резервний магічний лінк",
+                    "description": "Одноразовий токен входу відправлено на підтверджений email",
+                },
+                "ai_reply": "Бачу, що ваш акаунт активний, але SMS-шлюз мобільного оператора тимчасово затримує доставку кодів. "
+                            "Щоб ви не чекали, я надіслала одноразове безпечне посилання для миттєвого входу на ваш email (d****@example.com). "
+                            "Перевірте пошту — лінк дійсний 15 хвилин!",
+            }
+        else:
+            STATE.log("homework_check", student="Денис Коваль")
+            return {
+                "role": role,
+                "intent": "homework_sync_issue",
+                "intent_title": "Домашнє завдання не відображається",
+                "verified_context": {
+                    "attempt_time": "Вчора, 21:14",
+                    "file_size": "2.4 MB (PDF)",
+                    "upload_status": "Тимчасова помилка хмарного сховища (S3 timeout)",
+                },
+                "checked_by_ai": "Журнал спроб завантаження файлів, кеш чернетки у браузері",
+                "decision_type": "resolved_by_ai",
+                "proposed_action": {
+                    "title": "Відновлення з чернетки",
+                    "description": "Робота знайдена в локальному кеші платформи та автоматично надіслана викладачу",
+                },
+                "ai_reply": "Перевірила логи: вчора о 21:14 ви дійсно завантажували файл із ДЗ (2.4 MB), але сталася затримка синхронізації з хмарою. "
+                            "Ваша чернетка збереглася! Я успішно синхронізувала файл із кабінетом викладача Олени Іванівни. Тепер статус: «Здано на перевірку».",
+            }
+
+    else:  # parent
+        if any(w in msg_l for w in ["оплат", "баланс", "списал", "2400", "2,400", "урок"]):
+            esc_id = STATE.new_esc_id()
+            new_esc = {
+                "id": esc_id,
+                "user_name": "Оксана Шевченко",
+                "user_role": "Батьки",
+                "problem": "Оплата 2,400 грн списана з картки, баланс уроків не поповнився",
+                "verified_context": "Monobank транзакція TX-9842 успішна. Вебхук білінгу отримано, але статус обробки застряг.",
+                "checked_by_ai": "Банківський шлюз (успішно), лог білінгу, баланс сім'ї (0 занять)",
+                "escalation_reason": "Політика безпеки: фінансові нарахування потребують авторизації адміністратора",
+                "priority": "P1",
+                "status": "pending",
+                "created_at": now(),
+            }
+            STATE.escalations.insert(0, new_esc)
+            STATE.log("escalation_created", esc_id=esc_id, role="parent", priority="P1")
+            return {
+                "role": role,
+                "intent": "payment_missing",
+                "intent_title": "Оплата успішна, заняття не з'явилися",
+                "verified_context": {
+                    "transaction": "TX-9842 (2,400 грн, Monobank)",
+                    "bank_status": "Успішно списано",
+                    "crm_balance": "0 занять (вебхук очікує підтвердження)",
+                },
+                "checked_by_ai": "Банківський шлюз, статус транзакції, чергу синхронізації оплат",
+                "decision_type": "escalated_to_admin",
+                "escalated_ticket": new_esc,
+                "ai_reply": "Я перевірила банківський шлюз: оплата 2,400 грн пройшла успішно, але через затримку платіжного шлюзу заняття ще не відобразилися в кабінеті. "
+                            f"Згідно з правилами фінансової безпеки школи, я не можу змінити баланс самостійно, тому я сформувала терміновий тікет P1 (№{esc_id}) для адміністратора. "
+                            "Він уже взятий у чергу з найвищим пріоритетом!",
+            }
+        else:
+            esc_id = STATE.new_esc_id()
+            new_esc = {
+                "id": esc_id,
+                "user_name": "Оксана Шевченко",
+                "user_role": "Батьки",
+                "problem": "Не вдається додати профіль другої дитини (Марія, 6 років)",
+                "verified_context": "Основний акаунт активний. Спроба створити сімейний профіль.",
+                "checked_by_ai": "Наявність дублікатів у базі, сімейний тариф",
+                "escalation_reason": "Потрібна ручна валідація сімейного зв'язку в CRM адміністратором",
+                "priority": "P2",
+                "status": "pending",
+                "created_at": now(),
+            }
+            STATE.escalations.append(new_esc)
+            STATE.log("escalation_created", esc_id=esc_id, role="parent", priority="P2")
+            return {
+                "role": role,
+                "intent": "sibling_profile_issue",
+                "intent_title": "Додавання другої дитини до акаунта",
+                "verified_context": {
+                    "parent_account": "Оксана Шевченко (перевірено)",
+                    "target_child": "Марія Шевченко (6 років)",
+                },
+                "checked_by_ai": "Наявність дублікатів у базі, сімейний тариф",
+                "decision_type": "escalated_to_admin",
+                "escalated_ticket": new_esc,
+                "ai_reply": "Перевірила дані: для активації сімейного профілю для другої дитини (Марії) потрібна підтверджуюча прив'язка в базі школи. "
+                            f"Я передала запит адміністратору (Тікет №{esc_id}), профіль буде підключено протягом кількох хвилин!",
+            }
+
+
+@app.post("/api/role-chat/resolve-booking")
+def resolve_booking(body: ResolveBooking):
+    STATE.calendar["resolved"] = True
+    STATE.calendar["final_resolution"] = f"Денис Коваль залишився на Пт 17:00. {body.student_to_move} перенесено на {body.chosen_slot}. Обом родинам надіслано SMS-підтвердження."
+    STATE.log("conflict_resolved", slot=body.chosen_slot, student=body.student_to_move)
+    return {
+        "ok": True,
+        "calendar": STATE.calendar,
+        "message": STATE.calendar["final_resolution"]
+    }
+
+
+@app.get("/api/admin/escalations")
+def admin_escalations():
+    return STATE.escalations
+
+
+@app.post("/api/admin/escalations/{esc_id}/resolve")
+def resolve_escalation(esc_id: str):
+    esc = next((e for e in STATE.escalations if e["id"] == esc_id), None)
+    if not esc:
+        raise HTTPException(404, "Тікет не знайдено")
+    esc["status"] = "resolved"
+    esc["resolution_note"] = "Вирішено адміністратором: транзакцію підтверджено, заняття зараховано на баланс."
+    STATE.log("escalation_resolved", esc_id=esc_id)
+    return esc
+
+
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
